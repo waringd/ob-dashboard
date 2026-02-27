@@ -2,136 +2,146 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>OB Setup Dashboard — Live</title>
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+  :root{
+    --bg-primary:#0a0e17;--bg-secondary:#111827;--bg-card:#151d2e;--bg-hover:#1c2640;
+    --border:#1e293b;--text-primary:#e2e8f0;--text-secondary:#94a3b8;--text-muted:#64748b;
+    --accent-blue:#3b82f6;--accent-green:#10b981;--accent-red:#ef4444;--accent-amber:#f59e0b;
+    --long-color:#10b981;--short-color:#ef4444;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Outfit',sans-serif;background:var(--bg-primary);color:var(--text-primary);height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 
-  :root {
-    --bg-primary: #0a0e17;
-    --bg-secondary: #111827;
-    --bg-card: #151d2e;
-    --bg-hover: #1c2640;
-    --border: #1e293b;
-    --text-primary: #e2e8f0;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --accent-blue: #3b82f6;
-    --accent-green: #10b981;
-    --accent-red: #ef4444;
-    --accent-amber: #f59e0b;
-    --long-color: #10b981;
-    --short-color: #ef4444;
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    font-family:'Outfit',sans-serif; background:var(--bg-primary);
-    color:var(--text-primary); height:100vh; display:flex; flex-direction:column; overflow:hidden;
-  }
-  .topbar {
-    display:flex; align-items:center; justify-content:space-between;
-    padding:8px 16px; background:var(--bg-secondary);
-    border-bottom:1px solid var(--border); flex-shrink:0; height:48px;
-  }
-  .topbar-left { display:flex; align-items:center; gap:16px; }
-  .logo { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:14px; color:var(--accent-blue); }
-  .logo span { color:var(--text-muted); font-weight:400; }
-  .nav-link {
-    font-size:12px; color:var(--text-secondary); text-decoration:none;
-    padding:4px 10px; border-radius:4px; transition:all .15s;
-  }
-  .nav-link:hover,.nav-link.active { color:var(--text-primary); background:var(--bg-hover); }
-  .nav-link.active { color:var(--accent-blue); }
-  .topbar-right { display:flex; align-items:center; gap:12px; }
-  .status-dot { width:7px;height:7px;border-radius:50%;background:var(--accent-green);animation:pulse 2s infinite; }
-  .status-dot.offline { background:var(--accent-red);animation:none; }
+  /* ── Topbar ── */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:var(--bg-secondary);border-bottom:1px solid var(--border);flex-shrink:0;min-height:44px}
+  .topbar-left{display:flex;align-items:center;gap:10px}
+  .logo{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:var(--accent-blue)}.logo span{color:var(--text-muted);font-weight:400}
+  .nav-link{font-size:11px;color:var(--text-secondary);text-decoration:none;padding:4px 8px;border-radius:4px;transition:all .15s}
+  .nav-link:hover,.nav-link.active{color:var(--text-primary);background:var(--bg-hover)}.nav-link.active{color:var(--accent-blue)}
+  .topbar-right{display:flex;align-items:center;gap:8px}
+  .status-dot{width:6px;height:6px;border-radius:50%;background:var(--accent-green);animation:pulse 2s infinite}
+  .status-dot.offline{background:var(--accent-red);animation:none}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-  .status-text { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-muted); }
-  .settings-btn {
-    background:none;border:1px solid var(--border);color:var(--text-secondary);
-    padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;
-    font-family:'Outfit',sans-serif;transition:all .15s;
+  .status-text{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted)}
+  .settings-btn{background:none;border:1px solid var(--border);color:var(--text-secondary);padding:3px 8px;border-radius:4px;font-size:10px;cursor:pointer;font-family:'Outfit',sans-serif}
+
+  /* ── Main Layout ── */
+  .main-layout{display:flex;flex:1;overflow:hidden;position:relative}
+
+  /* ── Sidebar / List View ── */
+  .sidebar{width:260px;background:var(--bg-secondary);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+  .sidebar-header{padding:10px;border-bottom:1px solid var(--border)}
+  .filter-row{display:flex;gap:4px}
+  .filter-btn{flex:1;padding:5px 0;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;border-radius:4px;cursor:pointer;transition:all .15s}
+  .filter-btn:hover{border-color:var(--text-muted);color:var(--text-primary)}
+  .filter-btn.active{background:var(--accent-blue);border-color:var(--accent-blue);color:white}
+  .trade-list{flex:1;overflow-y:auto;padding:4px;-webkit-overflow-scrolling:touch}
+  .trade-list::-webkit-scrollbar{width:4px}.trade-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+  .trade-item{padding:10px 12px;border-radius:6px;cursor:pointer;transition:all .15s;border:1px solid transparent;margin-bottom:2px}
+  .trade-item:hover{background:var(--bg-hover)}.trade-item.selected{background:var(--bg-card);border-color:var(--accent-blue)}
+  .trade-item-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+  .trade-symbol{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:13px}
+  .trade-dir{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px}
+  .trade-dir.long{background:rgba(16,185,129,.15);color:var(--long-color)}.trade-dir.short{background:rgba(239,68,68,.15);color:var(--short-color)}
+  .trade-meta{display:flex;gap:8px;font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
+  .trade-meta .tag{background:var(--bg-primary);padding:1px 5px;border-radius:3px}
+  .trade-status{font-size:10px;font-weight:500}
+  .trade-status.active{color:var(--accent-blue)}.trade-status.won{color:var(--accent-green)}.trade-status.lost{color:var(--accent-red)}
+  .no-trades{text-align:center;padding:40px 20px;color:var(--text-muted);font-size:13px}.no-trades .icon{font-size:28px;margin-bottom:8px}
+
+  /* ── Chart Area ── */
+  .chart-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+  .chart-header{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;border-bottom:1px solid var(--border);flex-shrink:0;gap:8px}
+  .chart-back-btn{display:none;background:none;border:1px solid var(--border);color:var(--text-secondary);padding:4px 10px;border-radius:4px;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;flex-shrink:0}
+  .chart-symbol-info{display:flex;align-items:center;gap:8px;min-width:0}
+  .chart-symbol-name{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700}
+  .chart-tf-badge{font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg-hover);padding:2px 6px;border-radius:4px;color:var(--text-secondary);white-space:nowrap}
+  .chart-container{flex:1;position:relative;min-height:0}
+  #chart{width:100%;height:100%}
+
+  /* ── Details Panel ── */
+  .details-panel{padding:8px 12px;background:var(--bg-secondary);border-top:1px solid var(--border);flex-shrink:0;display:none;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .details-panel.visible{display:flex;gap:16px}
+  .detail-group{display:flex;flex-direction:column;gap:1px;flex-shrink:0}
+  .detail-label{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
+  .detail-value{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500}
+  .detail-value.entry{color:var(--accent-blue)}.detail-value.sl{color:var(--accent-red)}.detail-value.tp{color:var(--accent-green)}.detail-value.rr{color:var(--accent-amber)}
+
+  /* ── Drawing Toolbar ── */
+  .draw-toolbar{position:absolute;top:8px;right:8px;z-index:20;display:none;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:3px;flex-direction:column;gap:1px}
+  .draw-toolbar.visible{display:flex}
+  .draw-btn{width:34px;height:34px;border:none;background:transparent;color:var(--text-secondary);border-radius:6px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+  .draw-btn:hover{background:var(--bg-hover);color:var(--text-primary)}.draw-btn.active{background:var(--accent-blue);color:white}
+  .draw-sep{width:24px;height:1px;background:var(--border);margin:1px auto}
+  .color-row{display:flex;gap:3px;padding:3px 2px;justify-content:center}
+  .color-dot{width:12px;height:12px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color .15s}
+  .color-dot:hover,.color-dot.active{border-color:white}
+  .draw-indicator{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);z-index:20;background:var(--accent-blue);color:white;padding:5px 14px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:10px;display:none;pointer-events:none;white-space:nowrap}
+  .draw-indicator.visible{display:block}
+  .chart-legend{position:absolute;top:8px;left:8px;z-index:10;display:flex;gap:10px;font-size:9px;font-family:'JetBrains Mono',monospace;background:rgba(10,14,23,.85);padding:4px 10px;border-radius:4px;flex-wrap:wrap}
+  .legend-item{display:flex;align-items:center;gap:3px}.legend-swatch{width:14px;height:2px}.legend-box{width:12px;height:7px;border-radius:1px}
+
+  /* ── Modal ── */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center;padding:16px}
+  .modal-overlay.visible{display:flex}
+  .modal{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;width:400px;max-width:100%}
+  .modal h3{font-size:15px;margin-bottom:14px}
+  .modal label{display:block;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;margin-top:10px}
+  .modal input{width:100%;padding:8px 10px;background:var(--bg-primary);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:12px}
+  .modal input:focus{outline:none;border-color:var(--accent-blue)}
+  .modal-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end}
+  .modal-btn{padding:8px 16px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:none;font-family:'Outfit',sans-serif}
+  .modal-btn.primary{background:var(--accent-blue);color:white}.modal-btn.secondary{background:var(--bg-hover);color:var(--text-secondary)}
+
+  .welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-muted);gap:10px;padding:20px}
+  .welcome .icon{font-size:40px;opacity:.3}.welcome h2{font-size:16px;color:var(--text-secondary);font-weight:500}
+  .welcome p{font-size:12px;max-width:280px;text-align:center;line-height:1.5}
+
+  /* ═══════════════════════════════════════════
+     MOBILE — sidebar & chart are full-screen views
+     that toggle visibility
+     ═══════════════════════════════════════════ */
+  @media(max-width:768px){
+    .topbar{padding:6px 10px;min-height:40px}
+    .topbar-left{gap:6px}
+    .logo{font-size:12px}
+    .nav-link{font-size:10px;padding:3px 6px}
+    .status-text{display:none}
+
+    .main-layout{flex-direction:column}
+
+    /* On mobile, sidebar takes full space */
+    .sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border)}
+    /* Chart area hidden by default on mobile */
+    .chart-area{display:none}
+
+    /* When chart is active on mobile */
+    body.mobile-chart-view .sidebar{display:none}
+    body.mobile-chart-view .chart-area{display:flex;flex:1}
+
+    /* Show back button on mobile */
+    .chart-back-btn{display:block}
+
+    /* Details panel scrolls horizontally on mobile */
+    .details-panel.visible{gap:12px;padding:8px 10px}
+    .detail-label{font-size:8px}
+    .detail-value{font-size:11px}
+
+    /* Drawing toolbar smaller on mobile */
+    .draw-toolbar{top:4px;right:4px;padding:2px}
+    .draw-btn{width:30px;height:30px;font-size:13px}
+    .color-dot{width:10px;height:10px}
+    .chart-legend{font-size:8px;gap:6px;padding:3px 6px}
+    .draw-indicator{font-size:9px;padding:4px 10px}
+
+    /* Chart header compact */
+    .chart-header{padding:4px 8px}
+    .chart-symbol-name{font-size:13px}
   }
-  .settings-btn:hover { border-color:var(--accent-blue);color:var(--text-primary); }
-  .main-layout { display:flex; flex:1; overflow:hidden; }
-  .sidebar {
-    width:260px;background:var(--bg-secondary);border-right:1px solid var(--border);
-    display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;
-  }
-  .sidebar-header { padding:12px;border-bottom:1px solid var(--border); }
-  .filter-row { display:flex;gap:4px; }
-  .filter-btn {
-    flex:1;padding:5px 0;border:1px solid var(--border);background:transparent;
-    color:var(--text-secondary);font-family:'JetBrains Mono',monospace;
-    font-size:10px;font-weight:500;border-radius:4px;cursor:pointer;transition:all .15s;
-  }
-  .filter-btn:hover { border-color:var(--text-muted);color:var(--text-primary); }
-  .filter-btn.active { background:var(--accent-blue);border-color:var(--accent-blue);color:white; }
-  .trade-list { flex:1;overflow-y:auto;padding:4px; }
-  .trade-list::-webkit-scrollbar { width:4px; }
-  .trade-list::-webkit-scrollbar-thumb { background:var(--border);border-radius:2px; }
-  .trade-item {
-    padding:10px 12px;border-radius:6px;cursor:pointer;
-    transition:all .15s;border:1px solid transparent;margin-bottom:2px;
-  }
-  .trade-item:hover { background:var(--bg-hover); }
-  .trade-item.selected { background:var(--bg-card);border-color:var(--accent-blue); }
-  .trade-item-top { display:flex;justify-content:space-between;align-items:center;margin-bottom:4px; }
-  .trade-symbol { font-family:'JetBrains Mono',monospace;font-weight:600;font-size:13px; }
-  .trade-dir { font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px; }
-  .trade-dir.long { background:rgba(16,185,129,.15);color:var(--long-color); }
-  .trade-dir.short { background:rgba(239,68,68,.15);color:var(--short-color); }
-  .trade-meta { display:flex;gap:8px;font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace; }
-  .trade-meta .tag { background:var(--bg-primary);padding:1px 5px;border-radius:3px; }
-  .trade-status { font-size:10px;font-weight:500; }
-  .trade-status.active { color:var(--accent-blue); }
-  .trade-status.won { color:var(--accent-green); }
-  .trade-status.lost { color:var(--accent-red); }
-  .no-trades { text-align:center;padding:40px 20px;color:var(--text-muted);font-size:13px; }
-  .no-trades .icon { font-size:28px;margin-bottom:8px; }
-  .chart-area { flex:1;display:flex;flex-direction:column;overflow:hidden; }
-  .chart-header {
-    display:flex;align-items:center;justify-content:space-between;
-    padding:8px 16px;border-bottom:1px solid var(--border);flex-shrink:0;
-  }
-  .chart-symbol-info { display:flex;align-items:center;gap:12px; }
-  .chart-symbol-name { font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700; }
-  .chart-tf-badge { font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg-hover);padding:3px 8px;border-radius:4px;color:var(--text-secondary); }
-  .chart-container { flex:1;position:relative; }
-  #chart { width:100%;height:100%; }
-  .details-panel { padding:10px 16px;background:var(--bg-secondary);border-top:1px solid var(--border);flex-shrink:0;display:none; }
-  .details-panel.visible { display:flex;gap:24px;flex-wrap:wrap; }
-  .detail-group { display:flex;flex-direction:column;gap:2px; }
-  .detail-label { font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px; }
-  .detail-value { font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500; }
-  .detail-value.entry { color:var(--accent-blue); }
-  .detail-value.sl { color:var(--accent-red); }
-  .detail-value.tp { color:var(--accent-green); }
-  .detail-value.rr { color:var(--accent-amber); }
-  .modal-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center; }
-  .modal-overlay.visible { display:flex; }
-  .modal { background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;width:400px;max-width:90vw; }
-  .modal h3 { font-size:16px;margin-bottom:16px; }
-  .modal label { display:block;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;margin-top:12px; }
-  .modal input { width:100%;padding:8px 12px;background:var(--bg-primary);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:12px; }
-  .modal input:focus { outline:none;border-color:var(--accent-blue); }
-  .modal-actions { display:flex;gap:8px;margin-top:20px;justify-content:flex-end; }
-  .modal-btn { padding:8px 16px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:none;font-family:'Outfit',sans-serif;transition:all .15s; }
-  .modal-btn.primary { background:var(--accent-blue);color:white; }
-  .modal-btn.secondary { background:var(--bg-hover);color:var(--text-secondary); }
-  .welcome { flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-muted);gap:12px; }
-  .welcome .icon { font-size:48px;opacity:.3; }
-  .welcome h2 { font-size:18px;color:var(--text-secondary);font-weight:500; }
-  .welcome p { font-size:13px;max-width:320px;text-align:center;line-height:1.5; }
-  .chart-legend {
-    position:absolute;top:8px;left:8px;z-index:10;display:flex;gap:12px;
-    font-size:10px;font-family:'JetBrains Mono',monospace;
-    background:rgba(10,14,23,.85);padding:5px 12px;border-radius:4px;
-  }
-  .legend-item { display:flex;align-items:center;gap:4px; }
-  .legend-swatch { width:16px;height:2px; }
-  .legend-box { width:14px;height:8px;border-radius:1px; }
 </style>
 </head>
 <body>
@@ -159,59 +169,67 @@
         <button class="filter-btn" onclick="setFilter('active',this)">ACTIVE</button>
       </div>
     </div>
-    <div class="trade-list" id="tradeList">
-      <div class="no-trades"><div class="icon">📡</div>Loading setups...</div>
-    </div>
+    <div class="trade-list" id="tradeList"><div class="no-trades"><div class="icon">📡</div>Loading...</div></div>
   </div>
 
   <div class="chart-area">
     <div class="chart-header" id="chartHeader" style="display:none">
+      <button class="chart-back-btn" onclick="mobileBack()">← Back</button>
       <div class="chart-symbol-info">
         <span class="chart-symbol-name" id="chartSymbolName"></span>
         <span class="chart-tf-badge" id="chartTfBadge"></span>
       </div>
-      <span style="font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace" id="chartUpdateTime"></span>
+      <span style="font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;white-space:nowrap" id="chartUpdateTime"></span>
     </div>
     <div class="chart-container" id="chartContainer">
-      <div class="welcome" id="welcomeState">
-        <div class="icon">📊</div>
-        <h2>Select a trade</h2>
-        <p>Click any setup in the sidebar to load the chart with entry, SL, TP, and OB zone levels.</p>
-      </div>
+      <div class="welcome" id="welcomeState"><div class="icon">📊</div><h2>Select a trade</h2><p>Click any setup in the sidebar to view the chart.</p></div>
       <div id="chart" style="display:none"></div>
       <div class="chart-legend" id="chartLegend" style="display:none">
         <div class="legend-item"><div class="legend-swatch" style="background:#3b82f6"></div><span style="color:#3b82f6">Entry</span></div>
         <div class="legend-item"><div class="legend-swatch" style="background:#ef4444"></div><span style="color:#ef4444">SL</span></div>
         <div class="legend-item"><div class="legend-swatch" style="background:#10b981"></div><span style="color:#10b981">TP</span></div>
-        <div class="legend-item"><div class="legend-box" style="background:rgba(245,158,11,.2);border:1px solid #f59e0b"></div><span style="color:#f59e0b">OB Zone</span></div>
+        <div class="legend-item"><div class="legend-box" style="background:rgba(245,158,11,.2);border:1px solid #f59e0b"></div><span style="color:#f59e0b">OB</span></div>
       </div>
+      <div class="draw-toolbar" id="drawToolbar">
+        <button class="draw-btn" onclick="setDrawMode('pointer')" id="btnPointer"><span>↖</span></button>
+        <button class="draw-btn" onclick="setDrawMode('hline')" id="btnHline"><span>─</span></button>
+        <button class="draw-btn" onclick="setDrawMode('trendline')" id="btnTrend"><span>╱</span></button>
+        <button class="draw-btn" onclick="setDrawMode('ray')" id="btnRay"><span>→</span></button>
+        <div class="draw-sep"></div>
+        <button class="draw-btn" onclick="setDrawMode('delete')" id="btnDelete" style="color:var(--accent-red)"><span>✕</span></button>
+        <button class="draw-btn" onclick="clearAllDrawings()" id="btnClearAll"><span>🗑</span></button>
+        <div class="draw-sep"></div>
+        <div class="color-row">
+          <div class="color-dot active" style="background:#ffffff" onclick="setDrawColor('#ffffff',this)"></div>
+          <div class="color-dot" style="background:#3b82f6" onclick="setDrawColor('#3b82f6',this)"></div>
+          <div class="color-dot" style="background:#ef4444" onclick="setDrawColor('#ef4444',this)"></div>
+          <div class="color-dot" style="background:#10b981" onclick="setDrawColor('#10b981',this)"></div>
+          <div class="color-dot" style="background:#f59e0b" onclick="setDrawColor('#f59e0b',this)"></div>
+        </div>
+      </div>
+      <div class="draw-indicator" id="drawIndicator"></div>
     </div>
     <div class="details-panel" id="detailsPanel">
       <div class="detail-group"><span class="detail-label">Direction</span><span class="detail-value" id="detDir"></span></div>
       <div class="detail-group"><span class="detail-label">Entry</span><span class="detail-value entry" id="detEntry"></span></div>
-      <div class="detail-group"><span class="detail-label">Stop Loss</span><span class="detail-value sl" id="detSL"></span></div>
-      <div class="detail-group"><span class="detail-label">Take Profit</span><span class="detail-value tp" id="detTP"></span></div>
-      <div class="detail-group"><span class="detail-label">OB High</span><span class="detail-value" id="detOBH"></span></div>
-      <div class="detail-group"><span class="detail-label">OB Low</span><span class="detail-value" id="detOBL"></span></div>
+      <div class="detail-group"><span class="detail-label">SL</span><span class="detail-value sl" id="detSL"></span></div>
+      <div class="detail-group"><span class="detail-label">TP</span><span class="detail-value tp" id="detTP"></span></div>
+      <div class="detail-group"><span class="detail-label">OB Hi</span><span class="detail-value" id="detOBH"></span></div>
+      <div class="detail-group"><span class="detail-label">OB Lo</span><span class="detail-value" id="detOBL"></span></div>
       <div class="detail-group"><span class="detail-label">RR</span><span class="detail-value rr" id="detRR"></span></div>
       <div class="detail-group"><span class="detail-label">Source</span><span class="detail-value" id="detSource"></span></div>
       <div class="detail-group"><span class="detail-label">Status</span><span class="detail-value" id="detStatus"></span></div>
-      <div class="detail-group"><span class="detail-label">Time</span><span class="detail-value" id="detTime"></span></div>
     </div>
   </div>
 </div>
 
 <div class="modal-overlay" id="settingsModal">
   <div class="modal">
-    <h3>⚙ Dashboard Settings</h3>
-    <label>API URL</label>
-    <input type="text" id="cfgApiUrl">
-    <label>API Key</label>
-    <input type="text" id="cfgApiKey">
-    <label>Twelve Data API Key</label>
-    <input type="text" id="cfgTdKey">
-    <label>Poll Interval (seconds)</label>
-    <input type="number" id="cfgInterval" min="10" max="120">
+    <h3>⚙ Settings</h3>
+    <label>API URL</label><input type="text" id="cfgApiUrl">
+    <label>API Key</label><input type="text" id="cfgApiKey">
+    <label>Twelve Data API Key</label><input type="text" id="cfgTdKey">
+    <label>Poll Interval (sec)</label><input type="number" id="cfgInterval" min="10" max="120">
     <div class="modal-actions">
       <button class="modal-btn secondary" onclick="closeSettings()">Cancel</button>
       <button class="modal-btn primary" onclick="saveSettings()">Save</button>
@@ -220,61 +238,35 @@
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════════════
-const DEFAULTS = { apiUrl:'https://ob-setup-api.onrender.com', apiKey:'Xd8xhdyxjQqq', tdKey:'', interval:30 };
-function loadCfg(){ try{ return{...DEFAULTS,...JSON.parse(localStorage.getItem('obdash_config')||'{}')} }catch{return{...DEFAULTS}} }
-function saveCfg(c){ localStorage.setItem('obdash_config',JSON.stringify(c)) }
-let config=loadCfg(), allSetups={}, currentFilter='ALL', selectedSetup=null;
-let chart=null, candleSeries=null, priceLines=[], obZoneSeries=null, candleInterval=null;
+const DEFAULTS={apiUrl:'https://ob-setup-api.onrender.com',apiKey:'Xd8xhdyxjQqq',tdKey:'',interval:30};
+function loadCfg(){try{return{...DEFAULTS,...JSON.parse(localStorage.getItem('obdash_config')||'{}')}}catch{return{...DEFAULTS}}}
+function saveCfg(c){localStorage.setItem('obdash_config',JSON.stringify(c))}
+let config=loadCfg(),allSetups={},currentFilter='ALL',selectedSetup=null;
+let chart=null,candleSeries=null,priceLines=[],obZoneSeries=null,candleInterval=null,currentCandles=[];
+let drawMode='pointer',drawColor='#ffffff',drawPendingPoint=null,userDrawingSeries=[],loadedDrawings=[];
+const isMobile=()=>window.innerWidth<=768;
 
-function openSettings(){
-  document.getElementById('cfgApiUrl').value=config.apiUrl;
-  document.getElementById('cfgApiKey').value=config.apiKey;
-  document.getElementById('cfgTdKey').value=config.tdKey;
-  document.getElementById('cfgInterval').value=config.interval;
-  document.getElementById('settingsModal').classList.add('visible');
-}
-function closeSettings(){ document.getElementById('settingsModal').classList.remove('visible') }
-function saveSettings(){
-  config.apiUrl=document.getElementById('cfgApiUrl').value.replace(/\/+$/,'');
-  config.apiKey=document.getElementById('cfgApiKey').value;
-  config.tdKey=document.getElementById('cfgTdKey').value;
-  config.interval=parseInt(document.getElementById('cfgInterval').value)||30;
-  saveCfg(config); closeSettings(); fetchSetups();
-}
+function openSettings(){document.getElementById('cfgApiUrl').value=config.apiUrl;document.getElementById('cfgApiKey').value=config.apiKey;document.getElementById('cfgTdKey').value=config.tdKey;document.getElementById('cfgInterval').value=config.interval;document.getElementById('settingsModal').classList.add('visible')}
+function closeSettings(){document.getElementById('settingsModal').classList.remove('visible')}
+function saveSettings(){config.apiUrl=document.getElementById('cfgApiUrl').value.replace(/\/+$/,'');config.apiKey=document.getElementById('cfgApiKey').value;config.tdKey=document.getElementById('cfgTdKey').value;config.interval=parseInt(document.getElementById('cfgInterval').value)||30;saveCfg(config);closeSettings();fetchSetups()}
 
-// ── Fetch setups ──
+// ── Mobile view toggle ──
+function mobileShowChart(){document.body.classList.add('mobile-chart-view')}
+function mobileBack(){document.body.classList.remove('mobile-chart-view');setDrawMode('pointer')}
+
 async function fetchSetups(){
-  try{
-    const r=await fetch(`${config.apiUrl}/all`,{headers:{'X-API-Key':config.apiKey}});
-    if(!r.ok) throw new Error(`HTTP ${r.status}`);
-    allSetups=await r.json();
-    setStatus(true,`${Object.keys(allSetups).length} pairs`);
-    renderTradeList();
-    if(selectedSetup){
-      const s=(allSetups[selectedSetup.symbol]||[]).find(x=>x.ticket===selectedSetup.ticket);
-      if(s) updateDetails(s);
-    }
-  }catch(e){ console.error('Fetch failed:',e); setStatus(false,'API error'); }
+  try{const r=await fetch(`${config.apiUrl}/all`,{headers:{'X-API-Key':config.apiKey}});if(!r.ok)throw new Error(`HTTP ${r.status}`);allSetups=await r.json();setStatus(true,`${Object.keys(allSetups).length} pairs`);renderTradeList()}catch(e){console.error(e);setStatus(false,'API error')}
 }
-function setStatus(on,t){
-  document.getElementById('statusDot').className='status-dot'+(on?'':' offline');
-  document.getElementById('statusText').textContent=t;
-}
+function setStatus(on,t){document.getElementById('statusDot').className='status-dot'+(on?'':' offline');document.getElementById('statusText').textContent=t}
 
-// ── Trade list ──
 function renderTradeList(){
-  const el=document.getElementById('tradeList');
-  let trades=[];
-  for(const[,setups]of Object.entries(allSetups)) trades.push(...setups);
-  if(currentFilter==='H1') trades=trades.filter(t=>t.timeframe==='H1');
-  else if(currentFilter==='M15') trades=trades.filter(t=>t.timeframe==='M15');
-  else if(currentFilter==='active') trades=trades.filter(t=>t.status==='active');
+  const el=document.getElementById('tradeList');let trades=[];
+  for(const[,s]of Object.entries(allSetups))trades.push(...s);
+  if(currentFilter==='H1')trades=trades.filter(t=>t.timeframe==='H1');
+  else if(currentFilter==='M15')trades=trades.filter(t=>t.timeframe==='M15');
+  else if(currentFilter==='active')trades=trades.filter(t=>t.status==='active');
   trades.sort((a,b)=>(b.time_unix||0)-(a.time_unix||0));
-  if(!trades.length){
-    el.innerHTML=`<div class="no-trades"><div class="icon">📭</div>No setups found.<br><span style="font-size:11px;margin-top:8px;display:block">${!Object.keys(allSetups).length?'Start your MT5 scripts to send setups.':'Try changing the filter.'}</span></div>`;
-    return;
-  }
+  if(!trades.length){el.innerHTML=`<div class="no-trades"><div class="icon">📭</div>No setups found.</div>`;return}
   el.innerHTML=trades.map(t=>{
     const sel=selectedSetup&&selectedSetup.ticket===t.ticket&&selectedSetup.symbol===t.symbol;
     const dc=t.direction==='LONG'?'long':'short';
@@ -282,171 +274,174 @@ function renderTradeList(){
     const sl=t.status==='active'?'● ACTIVE':t.status==='closed_tp'?'✓ TP':'✗ SL';
     return`<div class="trade-item ${sel?'selected':''}" onclick='selectTrade(${JSON.stringify(t).replace(/'/g,"&#39;")})'>
       <div class="trade-item-top"><span class="trade-symbol">${t.symbol}</span><span class="trade-dir ${dc}">${t.direction}</span></div>
-      <div class="trade-meta"><span class="tag">${t.timeframe}</span><span class="tag">${(t.source||'').toUpperCase()}</span><span class="trade-status ${sc}">${sl}</span></div></div>`;
-  }).join('');
+      <div class="trade-meta"><span class="tag">${t.timeframe}</span><span class="tag">${(t.source||'').toUpperCase()}</span><span class="trade-status ${sc}">${sl}</span></div></div>`
+  }).join('')
 }
-function setFilter(f,btn){
-  currentFilter=f;
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active'); renderTradeList();
-}
+function setFilter(f,btn){currentFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderTradeList()}
 
-// ── Select trade ──
 function selectTrade(setup){
-  selectedSetup=setup; renderTradeList();
+  selectedSetup=setup;renderTradeList();
   document.getElementById('welcomeState').style.display='none';
   document.getElementById('chart').style.display='block';
   document.getElementById('chartHeader').style.display='flex';
   document.getElementById('chartLegend').style.display='flex';
+  document.getElementById('drawToolbar').classList.add('visible');
   document.getElementById('detailsPanel').classList.add('visible');
   document.getElementById('chartSymbolName').textContent=setup.symbol;
   document.getElementById('chartTfBadge').textContent=`${setup.timeframe} · ${(setup.source||'').toUpperCase()}`;
-  updateDetails(setup); loadChart(setup);
+  updateDetails(setup);loadChart(setup);setDrawMode('pointer');
+  if(isMobile())mobileShowChart();
 }
 function updateDetails(s){
   const p=s.symbol.includes('JPY')?3:5;
-  document.getElementById('detDir').textContent=s.direction;
-  document.getElementById('detDir').style.color=s.direction==='LONG'?'var(--long-color)':'var(--short-color)';
-  document.getElementById('detEntry').textContent=s.entry.toFixed(p);
-  document.getElementById('detSL').textContent=s.sl.toFixed(p);
-  document.getElementById('detTP').textContent=s.tp.toFixed(p);
-  document.getElementById('detOBH').textContent=s.ob_high.toFixed(p);
-  document.getElementById('detOBL').textContent=s.ob_low.toFixed(p);
-  document.getElementById('detRR').textContent=`${s.rr}:1`;
+  document.getElementById('detDir').textContent=s.direction;document.getElementById('detDir').style.color=s.direction==='LONG'?'var(--long-color)':'var(--short-color)';
+  document.getElementById('detEntry').textContent=s.entry.toFixed(p);document.getElementById('detSL').textContent=s.sl.toFixed(p);
+  document.getElementById('detTP').textContent=s.tp.toFixed(p);document.getElementById('detOBH').textContent=s.ob_high.toFixed(p);
+  document.getElementById('detOBL').textContent=s.ob_low.toFixed(p);document.getElementById('detRR').textContent=`${s.rr}:1`;
   document.getElementById('detSource').textContent=(s.source||'').toUpperCase();
   const el=document.getElementById('detStatus');
-  if(s.status==='active'){el.textContent='● ACTIVE';el.style.color='var(--accent-blue)';}
-  else if(s.status==='closed_tp'){el.textContent='✓ TP HIT';el.style.color='var(--accent-green)';}
-  else{el.textContent='✗ SL HIT';el.style.color='var(--accent-red)';}
-  document.getElementById('detTime').textContent=s.time||'';
+  if(s.status==='active'){el.textContent='● ACTIVE';el.style.color='var(--accent-blue)'}
+  else if(s.status==='closed_tp'){el.textContent='✓ TP';el.style.color='var(--accent-green)'}
+  else{el.textContent='✗ SL';el.style.color='var(--accent-red)'}
 }
 
-// ── Price format ──
-function pf(sym){
-  if(sym.includes('JPY')) return{type:'price',precision:3,minMove:0.001};
-  return{type:'price',precision:5,minMove:0.00001};
-}
+function pf(sym){return sym.includes('JPY')?{type:'price',precision:3,minMove:0.001}:{type:'price',precision:5,minMove:0.00001}}
 
-// ── Chart ──
 function initChart(symbol){
-  const c=document.getElementById('chart');
-  if(chart){chart.remove();chart=null;}
+  const c=document.getElementById('chart');if(chart){chart.remove();chart=null}
+  userDrawingSeries=[];obZoneSeries=null;priceLines=[];drawPendingPoint=null;
   chart=LightweightCharts.createChart(c,{
-    layout:{background:{type:'solid',color:'#0a0e17'},textColor:'#94a3b8',fontFamily:"'JetBrains Mono',monospace",fontSize:11},
+    layout:{background:{type:'solid',color:'#0a0e17'},textColor:'#94a3b8',fontFamily:"'JetBrains Mono',monospace",fontSize:10},
     grid:{vertLines:{color:'#1e293b44'},horzLines:{color:'#1e293b44'}},
     crosshair:{mode:LightweightCharts.CrosshairMode.Normal},
     rightPriceScale:{borderColor:'#1e293b',scaleMargins:{top:.08,bottom:.08}},
     timeScale:{borderColor:'#1e293b',timeVisible:true,secondsVisible:false},
-    handleScroll:true, handleScale:true,
+    handleScroll:true,handleScale:true,
   });
-  candleSeries=chart.addCandlestickSeries({
-    upColor:'#10b981',downColor:'#ef4444',borderUpColor:'#10b981',borderDownColor:'#ef4444',
-    wickUpColor:'#10b98188',wickDownColor:'#ef444488',
-    priceFormat:pf(symbol),
-  });
-  new ResizeObserver(()=>chart.applyOptions({width:c.clientWidth,height:c.clientHeight})).observe(c);
+  candleSeries=chart.addCandlestickSeries({upColor:'#10b981',downColor:'#ef4444',borderUpColor:'#10b981',borderDownColor:'#ef4444',wickUpColor:'#10b98188',wickDownColor:'#ef444488',priceFormat:pf(symbol)});
+  const ro=new ResizeObserver(()=>{if(chart)chart.applyOptions({width:c.clientWidth,height:c.clientHeight})});ro.observe(c);
+  chart.subscribeClick(handleChartClick);
 }
 
-function drawSetupLevels(setup, candles){
-  if(!candleSeries||!chart) return;
-  // Clear old lines
-  priceLines.forEach(pl=>{try{candleSeries.removePriceLine(pl)}catch{}});
-  priceLines=[];
-  // Remove old OB zone
-  if(obZoneSeries){try{chart.removeSeries(obZoneSeries)}catch{} obZoneSeries=null;}
-
-  // Entry / SL / TP lines
+function drawSetupLevels(setup,candles){
+  if(!candleSeries||!chart)return;
+  priceLines.forEach(pl=>{try{candleSeries.removePriceLine(pl)}catch{}});priceLines=[];
+  if(obZoneSeries){try{chart.removeSeries(obZoneSeries)}catch{}obZoneSeries=null}
   priceLines.push(candleSeries.createPriceLine({price:setup.entry,color:'#3b82f6',lineWidth:2,lineStyle:LightweightCharts.LineStyle.Dashed,axisLabelVisible:true,title:'ENTRY'}));
   priceLines.push(candleSeries.createPriceLine({price:setup.sl,color:'#ef4444',lineWidth:2,lineStyle:LightweightCharts.LineStyle.Dashed,axisLabelVisible:true,title:'SL'}));
   priceLines.push(candleSeries.createPriceLine({price:setup.tp,color:'#10b981',lineWidth:2,lineStyle:LightweightCharts.LineStyle.Dashed,axisLabelVisible:true,title:'TP'}));
-  // OB boundary lines
   priceLines.push(candleSeries.createPriceLine({price:setup.ob_high,color:'#f59e0b88',lineWidth:1,lineStyle:LightweightCharts.LineStyle.Solid,axisLabelVisible:false,title:''}));
   priceLines.push(candleSeries.createPriceLine({price:setup.ob_low,color:'#f59e0b88',lineWidth:1,lineStyle:LightweightCharts.LineStyle.Solid,axisLabelVisible:false,title:''}));
-
-  // OB Zone shaded area using baseline series
   if(candles&&candles.length){
-    obZoneSeries=chart.addBaselineSeries({
-      baseValue:{type:'price',price:setup.ob_low},
-      topLineColor:'transparent',
-      topFillColor1:'rgba(245,158,11,0.18)',
-      topFillColor2:'rgba(245,158,11,0.18)',
-      bottomLineColor:'transparent',
-      bottomFillColor1:'transparent',
-      bottomFillColor2:'transparent',
-      lineWidth:0,
-      lastValueVisible:false,
-      priceLineVisible:false,
-      crosshairMarkerVisible:false,
-      priceFormat:pf(setup.symbol),
-    });
+    obZoneSeries=chart.addBaselineSeries({baseValue:{type:'price',price:setup.ob_low},topLineColor:'transparent',topFillColor1:'rgba(245,158,11,0.18)',topFillColor2:'rgba(245,158,11,0.18)',bottomLineColor:'transparent',bottomFillColor1:'transparent',bottomFillColor2:'transparent',lineWidth:0,lastValueVisible:false,priceLineVisible:false,crosshairMarkerVisible:false,priceFormat:pf(setup.symbol)});
     obZoneSeries.setData(candles.map(c=>({time:c.time,value:setup.ob_high})));
   }
-
-  // Ensure chart shows all levels
   chart.timeScale().fitContent();
 }
+
+// ── Drawing tools ──
+function setDrawMode(mode){
+  drawMode=mode;drawPendingPoint=null;
+  document.querySelectorAll('.draw-btn').forEach(b=>b.classList.remove('active'));
+  const m={pointer:'btnPointer',hline:'btnHline',trendline:'btnTrend',ray:'btnRay',delete:'btnDelete'};
+  if(m[mode])document.getElementById(m[mode]).classList.add('active');
+  const ind=document.getElementById('drawIndicator');
+  const l={hline:'Tap to place horizontal line',trendline:'Tap first point',ray:'Tap to place ray',delete:'Tap a drawing to delete'};
+  if(l[mode]){ind.textContent=l[mode];ind.classList.add('visible')}else ind.classList.remove('visible');
+  document.getElementById('chart').style.cursor=mode==='pointer'?'default':'crosshair';
+}
+function setDrawColor(c,el){drawColor=c;document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('active'));if(el)el.classList.add('active')}
+
+function handleChartClick(param){
+  if(!param.time||!param.point||drawMode==='pointer')return;
+  const time=param.time,price=candleSeries.coordinateToPrice(param.point.y);
+  if(price==null)return;
+  if(drawMode==='hline'){createHLine(price,drawColor,true);setDrawMode('pointer')}
+  else if(drawMode==='ray'){createRay(time,price,drawColor,true);setDrawMode('pointer')}
+  else if(drawMode==='trendline'){
+    if(!drawPendingPoint){drawPendingPoint={time,price};document.getElementById('drawIndicator').textContent='Tap second point'}
+    else{createTrendline(drawPendingPoint.time,drawPendingPoint.price,time,price,drawColor,true);drawPendingPoint=null;setDrawMode('pointer')}
+  }else if(drawMode==='delete'){deleteNearestDrawing(time,price)}
+}
+function genId(){return'd_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)}
+function createHLine(price,color,save){
+  if(!candleSeries)return;const id=genId();
+  const pl=candleSeries.createPriceLine({price,color,lineWidth:1,lineStyle:LightweightCharts.LineStyle.Solid,axisLabelVisible:true,title:''});
+  userDrawingSeries.push({id,priceLine:pl,type:'hline',price,color});
+  if(save)saveDrawingToAPI(id,'hline',color,[{time:0,price}]);
+}
+function createRay(time,price,color,save){
+  if(!chart||!currentCandles.length)return;const id=genId();
+  const s=chart.addLineSeries({color,lineWidth:1,lineStyle:LightweightCharts.LineStyle.Solid,lastValueVisible:false,priceLineVisible:false,crosshairMarkerVisible:false,priceFormat:pf(selectedSetup?.symbol||'X')});
+  const ft=currentCandles[currentCandles.length-1].time+86400*30;
+  s.setData([{time,value:price},{time:ft,value:price}]);
+  userDrawingSeries.push({id,series:s,type:'ray',price,color});
+  if(save)saveDrawingToAPI(id,'ray',color,[{time,price}]);
+}
+function createTrendline(t1,p1,t2,p2,color,save){
+  if(!chart)return;const id=genId();
+  const s=chart.addLineSeries({color,lineWidth:1,lineStyle:LightweightCharts.LineStyle.Solid,lastValueVisible:false,priceLineVisible:false,crosshairMarkerVisible:false,priceFormat:pf(selectedSetup?.symbol||'X')});
+  const dt=t2-t1,dp=p2-p1,ext=86400*30,r=dt?dp/dt:0;
+  s.setData([{time:t1-ext,value:p1-r*ext},{time:t1,value:p1},{time:t2,value:p2},{time:t2+ext,value:p2+r*ext}]);
+  userDrawingSeries.push({id,series:s,type:'trendline',price:p1,color});
+  if(save)saveDrawingToAPI(id,'trendline',color,[{time:t1,price:p1},{time:t2,price:p2}]);
+}
+function deleteNearestDrawing(ct,cp){
+  if(!userDrawingSeries.length){setDrawMode('pointer');return}
+  let best=null,min=Infinity;
+  for(const d of userDrawingSeries){const dist=Math.abs((d.price||0)-cp);if(dist<min){min=dist;best=d}}
+  if(best){
+    if(best.priceLine)try{candleSeries.removePriceLine(best.priceLine)}catch{}
+    if(best.series)try{chart.removeSeries(best.series)}catch{}
+    userDrawingSeries=userDrawingSeries.filter(d=>d.id!==best.id);
+    deleteDrawingFromAPI(best.id);
+  }
+  setDrawMode('pointer');
+}
+async function clearAllDrawings(){
+  if(!selectedSetup||!confirm('Clear all drawings on '+selectedSetup.symbol+'?'))return;
+  for(const d of userDrawingSeries){if(d.priceLine)try{candleSeries.removePriceLine(d.priceLine)}catch{};if(d.series)try{chart.removeSeries(d.series)}catch{}}
+  userDrawingSeries=[];
+  try{await fetch(`${config.apiUrl}/drawings/${selectedSetup.symbol}/clear`,{method:'POST',headers:{'X-API-Key':config.apiKey}})}catch(e){console.error(e)}
+}
+async function saveDrawingToAPI(id,type,color,points){if(!selectedSetup)return;try{await fetch(`${config.apiUrl}/drawings/${selectedSetup.symbol}`,{method:'POST',headers:{'X-API-Key':config.apiKey,'Content-Type':'application/json'},body:JSON.stringify({id,type,color,lineWidth:1,points})})}catch(e){console.error(e)}}
+async function deleteDrawingFromAPI(id){if(!selectedSetup)return;try{await fetch(`${config.apiUrl}/drawings/${selectedSetup.symbol}/${id}`,{method:'DELETE',headers:{'X-API-Key':config.apiKey}})}catch(e){console.error(e)}}
+async function loadDrawingsFromAPI(){
+  if(!selectedSetup)return;
+  try{const r=await fetch(`${config.apiUrl}/drawings/${selectedSetup.symbol}`,{headers:{'X-API-Key':config.apiKey}});if(!r.ok)return;const d=await r.json();
+    for(const dr of(d.drawings||[])){const pts=dr.points||[];
+      if(dr.type==='hline'&&pts.length)createHLine(pts[0].price,dr.color,false);
+      else if(dr.type==='ray'&&pts.length)createRay(pts[0].time,pts[0].price,dr.color,false);
+      else if(dr.type==='trendline'&&pts.length>=2)createTrendline(pts[0].time,pts[0].price,pts[1].time,pts[1].price,dr.color,false);
+      if(userDrawingSeries.length)userDrawingSeries[userDrawingSeries.length-1].id=dr.id;
+    }
+  }catch(e){console.error(e)}
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')setDrawMode('pointer')});
 
 // ── Twelve Data ──
 function tdSym(s){return s.length===6&&!s.includes('/')?s.slice(0,3)+'/'+s.slice(3):s}
 function tdInt(tf){return{'M5':'5min','M15':'15min','H1':'1h','H4':'4h','D1':'1day'}[tf]||'1h'}
-
 async function fetchCandles(sym,tf,n=300){
-  if(!config.tdKey) return null;
-  try{
-    const r=await fetch(`https://api.twelvedata.com/time_series?symbol=${tdSym(sym)}&interval=${tdInt(tf)}&outputsize=${n}&apikey=${config.tdKey}&format=JSON&timezone=UTC`);
-    const d=await r.json();
-    if(d.status==='error'){console.error('TD:',d.message);return null;}
-    if(!d.values||!d.values.length) return null;
-    return d.values.reverse().map(v=>({
-      time:Math.floor(new Date(v.datetime+'Z').getTime()/1000),
-      open:+v.open,high:+v.high,low:+v.low,close:+v.close
-    }));
-  }catch(e){console.error('TD fetch fail:',e);return null;}
+  if(!config.tdKey)return null;
+  try{const r=await fetch(`https://api.twelvedata.com/time_series?symbol=${tdSym(sym)}&interval=${tdInt(tf)}&outputsize=${n}&apikey=${config.tdKey}&format=JSON&timezone=UTC`);const d=await r.json();
+    if(d.status==='error')return null;if(!d.values?.length)return null;
+    return d.values.reverse().map(v=>({time:Math.floor(new Date(v.datetime+'Z').getTime()/1000),open:+v.open,high:+v.high,low:+v.low,close:+v.close}))
+  }catch{return null}
 }
-
 async function loadChart(setup){
-  initChart(setup.symbol);
-  document.getElementById('chartUpdateTime').textContent='Loading candles...';
+  initChart(setup.symbol);document.getElementById('chartUpdateTime').textContent='Loading...';
   const candles=await fetchCandles(setup.symbol,setup.timeframe);
-  if(candles&&candles.length){
-    candleSeries.setData(candles);
-    drawSetupLevels(setup,candles);
-    document.getElementById('chartUpdateTime').textContent=`Updated ${new Date().toLocaleTimeString()}`;
-    startPolling(setup);
-  } else {
-    // Fallback: generate placeholder candles around setup levels
-    const now=Math.floor(Date.now()/1000);
-    const step=setup.timeframe==='M15'?900:3600;
-    const mid=(setup.entry+setup.tp)/2;
-    const rng=Math.abs(setup.ob_high-setup.ob_low)||0.001;
-    const synth=[];
-    for(let i=150;i>=0;i--){
-      const t=now-(i*step);
-      const o=mid+(Math.random()-.5)*rng*3;
-      const c=o+(Math.random()-.5)*rng;
-      synth.push({time:t,open:o,close:c,high:Math.max(o,c)+Math.random()*rng*.5,low:Math.min(o,c)-Math.random()*rng*.5});
-    }
-    candleSeries.setData(synth);
-    drawSetupLevels(setup,synth);
-    document.getElementById('chartUpdateTime').textContent=config.tdKey
-      ?'Candle load failed — showing placeholder':'⚠ Set Twelve Data API key in Settings for real candles';
-  }
+  if(candles?.length){currentCandles=candles;candleSeries.setData(candles);drawSetupLevels(setup,candles);document.getElementById('chartUpdateTime').textContent=`${new Date().toLocaleTimeString()}`;startPolling(setup)}
+  else{const now=Math.floor(Date.now()/1000),step=setup.timeframe==='M15'?900:3600,mid=(setup.entry+setup.tp)/2,rng=Math.abs(setup.ob_high-setup.ob_low)||.001;const sy=[];
+    for(let i=150;i>=0;i--){const t=now-i*step,o=mid+(Math.random()-.5)*rng*3,c=o+(Math.random()-.5)*rng;sy.push({time:t,open:o,close:c,high:Math.max(o,c)+Math.random()*rng*.5,low:Math.min(o,c)-Math.random()*rng*.5})}
+    currentCandles=sy;candleSeries.setData(sy);drawSetupLevels(setup,sy);document.getElementById('chartUpdateTime').textContent=config.tdKey?'Placeholder data':'Set TD key in ⚙'}
+  await loadDrawingsFromAPI();
 }
+function startPolling(setup){if(candleInterval)clearInterval(candleInterval);candleInterval=setInterval(async()=>{if(!selectedSetup||selectedSetup.symbol!==setup.symbol)return;const c=await fetchCandles(setup.symbol,setup.timeframe,5);if(c?.length){c.forEach(x=>candleSeries.update(x));document.getElementById('chartUpdateTime').textContent=new Date().toLocaleTimeString()}},(config.interval||30)*1000)}
 
-function startPolling(setup){
-  if(candleInterval) clearInterval(candleInterval);
-  candleInterval=setInterval(async()=>{
-    if(!selectedSetup||selectedSetup.symbol!==setup.symbol) return;
-    const c=await fetchCandles(setup.symbol,setup.timeframe,5);
-    if(c&&c.length){c.forEach(x=>candleSeries.update(x));
-      document.getElementById('chartUpdateTime').textContent=`Updated ${new Date().toLocaleTimeString()}`;}
-  },(config.interval||30)*1000);
-}
-
-// ── Init ──
-fetchSetups();
-setInterval(fetchSetups,(config.interval||30)*1000);
-if(!config.tdKey) setTimeout(()=>{if(!config.tdKey) setStatus(true,'Set Twelve Data key in Settings')},2000);
+fetchSetups();setInterval(fetchSetups,(config.interval||30)*1000);
+if(!config.tdKey)setTimeout(()=>{if(!config.tdKey)setStatus(true,'Set TD key in ⚙')},2000);
 </script>
 </body>
 </html>

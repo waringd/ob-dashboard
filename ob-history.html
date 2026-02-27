@@ -90,6 +90,32 @@
   .bar-container{flex:1;margin:0 12px;height:4px;background:var(--bg-primary);border-radius:2px;overflow:hidden}
   .bar-fill{height:100%;border-radius:2px;transition:width .3s}
   @media(max-width:800px){.breakdown-section{grid-template-columns:1fr}.stats-row{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:768px){
+    .topbar{padding:6px 10px;min-height:40px}
+    .topbar-left{gap:6px}
+    .logo{font-size:12px}
+    .nav-link{font-size:10px;padding:3px 6px}
+    .status-text{display:none}
+    .stats-row{grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 12px}
+    .stat-card{padding:10px 6px}
+    .stat-label{font-size:8px}
+    .stat-value{font-size:18px}
+    .filters-bar{padding:0 12px 10px;gap:8px}
+    .filter-group{gap:3px}
+    .filter-label{font-size:9px;margin-right:2px}
+    .fbtn{padding:4px 7px;font-size:9px}
+    .filter-select{font-size:10px;padding:4px 6px}
+    .table-container{padding:0 8px 16px}
+    thead th{padding:8px 6px;font-size:9px}
+    tbody td{padding:8px 6px;font-size:10px}
+    .detail-card{grid-template-columns:repeat(2,1fr);gap:8px;margin:4px 4px 8px;padding:12px}
+    .dc-label{font-size:8px}
+    .dc-value{font-size:11px}
+    .breakdown-section{padding:0 12px 16px;gap:10px}
+    .breakdown-card{padding:12px}
+    .breakdown-title{font-size:11px}
+    .breakdown-row{font-size:10px}
+  }
 </style>
 </head>
 <body>
