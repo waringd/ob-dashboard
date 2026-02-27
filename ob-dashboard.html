@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OB Setup Dashboard — Live</title>
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg-primary: #0a0e17;
+    --bg-secondary: #111827;
+    --bg-card: #151d2e;
+    --bg-hover: #1c2640;
+    --border: #1e293b;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --accent-blue: #3b82f6;
+    --accent-green: #10b981;
+    --accent-red: #ef4444;
+    --accent-amber: #f59e0b;
+    --accent-purple: #8b5cf6;
+    --long-color: #10b981;
+    --short-color: #ef4444;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── Top Bar ─────────────────────────────── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    height: 48px;
+  }
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--accent-blue);
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--text-muted); font-weight: 400; }
+  .nav-link {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .nav-link:hover, .nav-link.active {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+  }
+  .nav-link.active { color: var(--accent-blue); }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent-green);
+    animation: pulse 2s infinite;
+  }
+  .status-dot.offline { background: var(--accent-red); animation: none; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .status-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .settings-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: 'Outfit', sans-serif;
+    transition: all 0.15s;
+  }
+  .settings-btn:hover {
+    border-color: var(--accent-blue);
+    color: var(--text-primary);
+  }
+
+  /* ── Main Layout ─────────────────────────── */
+  .main-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── Sidebar ─────────────────────────────── */
+  .sidebar {
+    width: 260px;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .sidebar-header {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .filter-row {
+    display: flex;
+    gap: 4px;
+  }
+  .filter-btn {
+    flex: 1;
+    padding: 5px 0;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover { border-color: var(--text-muted); color: var(--text-primary); }
+  .filter-btn.active {
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+    color: white;
+  }
+  .trade-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px;
+  }
+  .trade-list::-webkit-scrollbar { width: 4px; }
+  .trade-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .trade-item {
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+    margin-bottom: 2px;
+  }
+  .trade-item:hover { background: var(--bg-hover); }
+  .trade-item.selected {
+    background: var(--bg-card);
+    border-color: var(--accent-blue);
+  }
+  .trade-item-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .trade-symbol {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .trade-dir {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+  .trade-dir.long { background: rgba(16, 185, 129, 0.15); color: var(--long-color); }
+  .trade-dir.short { background: rgba(239, 68, 68, 0.15); color: var(--short-color); }
+  .trade-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 10px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .trade-meta .tag {
+    background: var(--bg-primary);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  .trade-status {
+    font-size: 10px;
+    font-weight: 500;
+  }
+  .trade-status.active { color: var(--accent-blue); }
+  .trade-status.won { color: var(--accent-green); }
+  .trade-status.lost { color: var(--accent-red); }
+
+  .no-trades {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .no-trades .icon { font-size: 28px; margin-bottom: 8px; }
+
+  /* ── Chart Area ──────────────────────────── */
+  .chart-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .chart-symbol-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .chart-symbol-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .chart-tf-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    background: var(--bg-hover);
+    padding: 3px 8px;
+    border-radius: 4px;
+    color: var(--text-secondary);
+  }
+  .chart-container {
+    flex: 1;
+    position: relative;
+  }
+  #chart { width: 100%; height: 100%; }
+
+  /* ── Setup Details Panel ─────────────────── */
+  .details-panel {
+    padding: 10px 16px;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+    display: none;
+  }
+  .details-panel.visible { display: flex; gap: 24px; flex-wrap: wrap; }
+  .detail-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .detail-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .detail-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .detail-value.entry { color: var(--accent-blue); }
+  .detail-value.sl { color: var(--accent-red); }
+  .detail-value.tp { color: var(--accent-green); }
+  .detail-value.rr { color: var(--accent-amber); }
+
+  /* ── Settings Modal ──────────────────────── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.visible { display: flex; }
+  .modal {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    width: 400px;
+    max-width: 90vw;
+  }
+  .modal h3 {
+    font-size: 16px;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+  }
+  .modal label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    margin-top: 12px;
+  }
+  .modal input {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .modal input:focus { outline: none; border-color: var(--accent-blue); }
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+    justify-content: flex-end;
+  }
+  .modal-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    font-family: 'Outfit', sans-serif;
+    transition: all 0.15s;
+  }
+  .modal-btn.primary { background: var(--accent-blue); color: white; }
+  .modal-btn.secondary { background: var(--bg-hover); color: var(--text-secondary); }
+  .modal-btn:hover { opacity: 0.85; }
+  
+  /* ── Welcome state ───────────────────────── */
+  .welcome {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    gap: 12px;
+  }
+  .welcome .icon { font-size: 48px; opacity: 0.3; }
+  .welcome h2 { font-size: 18px; color: var(--text-secondary); font-weight: 500; }
+  .welcome p { font-size: 13px; max-width: 320px; text-align: center; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">OB<span>DASH</span></div>
+    <a href="ob-dashboard.html" class="nav-link active">Live Chart</a>
+    <a href="ob-history.html" class="nav-link">Trade History</a>
+  </div>
+  <div class="topbar-right">
+    <div class="status-dot" id="statusDot"></div>
+    <span class="status-text" id="statusText">Connecting...</span>
+    <button class="settings-btn" onclick="openSettings()">⚙ Settings</button>
+  </div>
+</div>
+
+<!-- Main Layout -->
+<div class="main-layout">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="filter-row">
+        <button class="filter-btn active" data-filter="ALL" onclick="setFilter('ALL', this)">ALL</button>
+        <button class="filter-btn" data-filter="H1" onclick="setFilter('H1', this)">H1</button>
+        <button class="filter-btn" data-filter="M15" onclick="setFilter('M15', this)">M15</button>
+        <button class="filter-btn" data-filter="active" onclick="setFilter('active', this)">ACTIVE</button>
+      </div>
+    </div>
+    <div class="trade-list" id="tradeList">
+      <div class="no-trades">
+        <div class="icon">📡</div>
+        Loading setups...
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart Area -->
+  <div class="chart-area">
+    <div class="chart-header" id="chartHeader" style="display:none;">
+      <div class="chart-symbol-info">
+        <span class="chart-symbol-name" id="chartSymbolName"></span>
+        <span class="chart-tf-badge" id="chartTfBadge"></span>
+      </div>
+      <span style="font-size:11px; color:var(--text-muted); font-family:'JetBrains Mono',monospace;" id="chartUpdateTime"></span>
+    </div>
+    <div class="chart-container" id="chartContainer">
+      <div class="welcome" id="welcomeState">
+        <div class="icon">📊</div>
+        <h2>Select a trade</h2>
+        <p>Click any setup in the sidebar to load the chart with entry, SL, TP, and OB zone levels drawn on it.</p>
+      </div>
+      <div id="chart" style="display:none;"></div>
+    </div>
+    <div class="details-panel" id="detailsPanel">
+      <div class="detail-group">
+        <span class="detail-label">Direction</span>
+        <span class="detail-value" id="detDir"></span>
+      </div>
+      <div class="detail-group">
+        <span class="detail-label">Entry</span>
+        <span class="detail-value entry" id="detEntry"></span>
+      </div>
+      <div class="detail-group">
+        <span class="detail-label">Stop Loss</span>
+        <span class="detail-value sl" id="detSL"></span>
+      </div>
+      <div class="detail-group">
+        <span class="detail-label">Take Profit</span>
+        <span class="detail-value tp" id="detTP"></span>
+      </div>
+      <div class="detail-group">
+        <span class="detail-label">OB High</span>
+        <span class="detail-value" id="detOBH"></span>
+      </div>
+      <div class="detail-group">
+        <span class="detail-label">OB Low</span>
+        <span class="detail-value" id="detOBL"></span>
+      </div>
+      <div class="detail-group">
+        <span class="detail-label">RR</span>
+        <span class="detail-value rr" id="detRR"></span>
+      </div>
+      <div class="detail-group">
+        <span class="detail-label">Source</span>
+        <span class="detail-value" id="detSource"></span>
+      </div>
+      <div class="detail-group">
+        <span class="detail-label">Status</span>
+        <span class="detail-value" id="detStatus"></span>
+      </div>
+      <div class="detail-group">
+        <span class="detail-label">Time</span>
+        <span class="detail-value" id="detTime"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <h3>⚙ Dashboard Settings</h3>
+    <label>API URL</label>
+    <input type="text" id="cfgApiUrl" placeholder="https://ob-setup-api.onrender.com">
+    <label>API Key</label>
+    <input type="text" id="cfgApiKey" placeholder="Your API key">
+    <label>Twelve Data API Key</label>
+    <input type="text" id="cfgTdKey" placeholder="Your Twelve Data API key">
+    <label>Poll Interval (seconds)</label>
+    <input type="number" id="cfgInterval" placeholder="30" min="10" max="120">
+    <div class="modal-actions">
+      <button class="modal-btn secondary" onclick="closeSettings()">Cancel</button>
+      <button class="modal-btn primary" onclick="saveSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════════
+const DEFAULTS = {
+  apiUrl:    'https://ob-setup-api.onrender.com',
+  apiKey:    'Xd8xhdyxjQqq',
+  tdKey:     '',
+  interval:  30,
+};
+
+function loadConfig() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('obdash_config') || '{}');
+    return { ...DEFAULTS, ...saved };
+  } catch { return { ...DEFAULTS }; }
+}
+function saveConfig(cfg) {
+  localStorage.setItem('obdash_config', JSON.stringify(cfg));
+}
+
+let config = loadConfig();
+let allSetups = {};  // symbol -> [setup, ...]
+let currentFilter = 'ALL';
+let selectedSetup = null;
+let chart = null;
+let candleSeries = null;
+let priceLines = [];
+let candleInterval = null;
+
+// ═══════════════════════════════════════════════════════════════
+// SETTINGS MODAL
+// ═══════════════════════════════════════════════════════════════
+function openSettings() {
+  document.getElementById('cfgApiUrl').value = config.apiUrl;
+  document.getElementById('cfgApiKey').value = config.apiKey;
+  document.getElementById('cfgTdKey').value = config.tdKey;
+  document.getElementById('cfgInterval').value = config.interval;
+  document.getElementById('settingsModal').classList.add('visible');
+}
+function closeSettings() {
+  document.getElementById('settingsModal').classList.remove('visible');
+}
+function saveSettings() {
+  config.apiUrl   = document.getElementById('cfgApiUrl').value.replace(/\/+$/, '');
+  config.apiKey   = document.getElementById('cfgApiKey').value;
+  config.tdKey    = document.getElementById('cfgTdKey').value;
+  config.interval = parseInt(document.getElementById('cfgInterval').value) || 30;
+  saveConfig(config);
+  closeSettings();
+  fetchSetups();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FETCH SETUPS FROM API
+// ═══════════════════════════════════════════════════════════════
+async function fetchSetups() {
+  try {
+    const resp = await fetch(`${config.apiUrl}/all`, {
+      headers: { 'X-API-Key': config.apiKey }
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    allSetups = await resp.json();
+    
+    setStatus(true, `${Object.keys(allSetups).length} pairs`);
+    renderTradeList();
+    
+    // Refresh current chart if a setup is selected
+    if (selectedSetup) {
+      const sym = selectedSetup.symbol;
+      const setups = allSetups[sym] || [];
+      const updated = setups.find(s => s.ticket === selectedSetup.ticket) || setups[0];
+      if (updated) updateDetailsPanel(updated);
+    }
+  } catch (e) {
+    console.error('Fetch setups failed:', e);
+    setStatus(false, 'API error');
+  }
+}
+
+function setStatus(online, text) {
+  document.getElementById('statusDot').className = `status-dot ${online ? '' : 'offline'}`;
+  document.getElementById('statusText').textContent = text;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER TRADE LIST
+// ═══════════════════════════════════════════════════════════════
+function renderTradeList() {
+  const container = document.getElementById('tradeList');
+  let trades = [];
+  
+  for (const [symbol, setups] of Object.entries(allSetups)) {
+    for (const s of setups) {
+      trades.push(s);
+    }
+  }
+
+  // Apply filter
+  if (currentFilter === 'H1') trades = trades.filter(t => t.timeframe === 'H1');
+  else if (currentFilter === 'M15') trades = trades.filter(t => t.timeframe === 'M15');
+  else if (currentFilter === 'active') trades = trades.filter(t => t.status === 'active');
+
+  // Sort newest first
+  trades.sort((a, b) => (b.time_unix || 0) - (a.time_unix || 0));
+
+  if (trades.length === 0) {
+    container.innerHTML = `
+      <div class="no-trades">
+        <div class="icon">📭</div>
+        No setups found.<br>
+        <span style="font-size:11px; margin-top:8px; display:block;">
+          ${Object.keys(allSetups).length === 0 
+            ? 'Start your MT5 scripts to send setups to the API.' 
+            : 'Try changing the filter.'}
+        </span>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = trades.map(t => {
+    const isSelected = selectedSetup && selectedSetup.ticket === t.ticket && selectedSetup.symbol === t.symbol;
+    const dirClass = t.direction === 'LONG' ? 'long' : 'short';
+    const statusClass = t.status === 'active' ? 'active' : t.status === 'closed_tp' ? 'won' : 'lost';
+    const statusLabel = t.status === 'active' ? '● ACTIVE' : t.status === 'closed_tp' ? '✓ TP HIT' : '✗ SL HIT';
+    const sourceLabel = (t.source || '').toUpperCase();
+    
+    return `
+      <div class="trade-item ${isSelected ? 'selected' : ''}" 
+           onclick='selectTrade(${JSON.stringify(t).replace(/'/g, "&#39;")})'>
+        <div class="trade-item-top">
+          <span class="trade-symbol">${t.symbol}</span>
+          <span class="trade-dir ${dirClass}">${t.direction}</span>
+        </div>
+        <div class="trade-meta">
+          <span class="tag">${t.timeframe}</span>
+          <span class="tag">${sourceLabel}</span>
+          <span class="trade-status ${statusClass}">${statusLabel}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTradeList();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SELECT TRADE → LOAD CHART
+// ═══════════════════════════════════════════════════════════════
+function selectTrade(setup) {
+  selectedSetup = setup;
+  renderTradeList();
+  
+  document.getElementById('welcomeState').style.display = 'none';
+  document.getElementById('chart').style.display = 'block';
+  document.getElementById('chartHeader').style.display = 'flex';
+  document.getElementById('detailsPanel').classList.add('visible');
+
+  document.getElementById('chartSymbolName').textContent = setup.symbol;
+  document.getElementById('chartTfBadge').textContent = `${setup.timeframe} · ${(setup.source || '').toUpperCase()}`;
+  
+  updateDetailsPanel(setup);
+  loadChart(setup);
+}
+
+function updateDetailsPanel(s) {
+  const prec = s.symbol.includes('JPY') ? 3 : 5;
+  document.getElementById('detDir').textContent = s.direction;
+  document.getElementById('detDir').style.color = s.direction === 'LONG' ? 'var(--long-color)' : 'var(--short-color)';
+  document.getElementById('detEntry').textContent = s.entry.toFixed(prec);
+  document.getElementById('detSL').textContent = s.sl.toFixed(prec);
+  document.getElementById('detTP').textContent = s.tp.toFixed(prec);
+  document.getElementById('detOBH').textContent = s.ob_high.toFixed(prec);
+  document.getElementById('detOBL').textContent = s.ob_low.toFixed(prec);
+  document.getElementById('detRR').textContent = `${s.rr}:1`;
+  document.getElementById('detSource').textContent = (s.source || '').toUpperCase();
+  
+  const statusEl = document.getElementById('detStatus');
+  if (s.status === 'active') { statusEl.textContent = '● ACTIVE'; statusEl.style.color = 'var(--accent-blue)'; }
+  else if (s.status === 'closed_tp') { statusEl.textContent = '✓ TP HIT'; statusEl.style.color = 'var(--accent-green)'; }
+  else { statusEl.textContent = '✗ SL HIT'; statusEl.style.color = 'var(--accent-red)'; }
+  
+  document.getElementById('detTime').textContent = s.time || '';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LIGHTWEIGHT CHARTS
+// ═══════════════════════════════════════════════════════════════
+function initChart() {
+  const container = document.getElementById('chart');
+  if (chart) { chart.remove(); chart = null; }
+  
+  chart = LightweightCharts.createChart(container, {
+    layout: {
+      background: { type: 'solid', color: '#0a0e17' },
+      textColor: '#94a3b8',
+      fontFamily: "'JetBrains Mono', monospace",
+      fontSize: 11,
+    },
+    grid: {
+      vertLines: { color: '#1e293b44' },
+      horzLines: { color: '#1e293b44' },
+    },
+    crosshair: {
+      mode: LightweightCharts.CrosshairMode.Normal,
+      vertLine: { color: '#3b82f644', width: 1, style: 0 },
+      horzLine: { color: '#3b82f644', width: 1, style: 0 },
+    },
+    rightPriceScale: {
+      borderColor: '#1e293b',
+      scaleMargins: { top: 0.1, bottom: 0.1 },
+    },
+    timeScale: {
+      borderColor: '#1e293b',
+      timeVisible: true,
+      secondsVisible: false,
+    },
+    handleScroll: true,
+    handleScale: true,
+  });
+
+  candleSeries = chart.addCandlestickSeries({
+    upColor: '#10b981',
+    downColor: '#ef4444',
+    borderUpColor: '#10b981',
+    borderDownColor: '#ef4444',
+    wickUpColor: '#10b98188',
+    wickDownColor: '#ef444488',
+  });
+
+  // Resize handler
+  const ro = new ResizeObserver(() => {
+    chart.applyOptions({ width: container.clientWidth, height: container.clientHeight });
+  });
+  ro.observe(container);
+}
+
+function clearPriceLines() {
+  if (!candleSeries) return;
+  priceLines.forEach(pl => {
+    try { candleSeries.removePriceLine(pl); } catch {}
+  });
+  priceLines = [];
+}
+
+function drawSetupLevels(setup) {
+  clearPriceLines();
+  if (!candleSeries) return;
+  
+  const isLong = setup.direction === 'LONG';
+  
+  // Entry line
+  priceLines.push(candleSeries.createPriceLine({
+    price: setup.entry,
+    color: '#3b82f6',
+    lineWidth: 2,
+    lineStyle: LightweightCharts.LineStyle.Dashed,
+    axisLabelVisible: true,
+    title: 'ENTRY',
+  }));
+
+  // Stop Loss
+  priceLines.push(candleSeries.createPriceLine({
+    price: setup.sl,
+    color: '#ef4444',
+    lineWidth: 1,
+    lineStyle: LightweightCharts.LineStyle.Dotted,
+    axisLabelVisible: true,
+    title: 'SL',
+  }));
+
+  // Take Profit
+  priceLines.push(candleSeries.createPriceLine({
+    price: setup.tp,
+    color: '#10b981',
+    lineWidth: 1,
+    lineStyle: LightweightCharts.LineStyle.Dotted,
+    axisLabelVisible: true,
+    title: 'TP',
+  }));
+
+  // OB High
+  priceLines.push(candleSeries.createPriceLine({
+    price: setup.ob_high,
+    color: isLong ? '#10b98166' : '#ef444466',
+    lineWidth: 1,
+    lineStyle: LightweightCharts.LineStyle.Solid,
+    axisLabelVisible: false,
+    title: '',
+  }));
+
+  // OB Low
+  priceLines.push(candleSeries.createPriceLine({
+    price: setup.ob_low,
+    color: isLong ? '#10b98166' : '#ef444466',
+    lineWidth: 1,
+    lineStyle: LightweightCharts.LineStyle.Solid,
+    axisLabelVisible: false,
+    title: '',
+  }));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TWELVE DATA — CANDLE FETCHING
+// ═══════════════════════════════════════════════════════════════
+function tdSymbol(symbol) {
+  // Twelve Data uses slash format for forex: EUR/USD
+  if (symbol.length === 6 && !symbol.includes('/')) {
+    return symbol.slice(0, 3) + '/' + symbol.slice(3);
+  }
+  return symbol;
+}
+
+function tdInterval(timeframe) {
+  const map = { 'M5': '5min', 'M15': '15min', 'H1': '1h', 'H4': '4h', 'D1': '1day' };
+  return map[timeframe] || '1h';
+}
+
+async function fetchCandles(symbol, timeframe, outputsize = 200) {
+  if (!config.tdKey) {
+    console.warn('No Twelve Data API key configured');
+    return null;
+  }
+  
+  const url = `https://api.twelvedata.com/time_series?symbol=${tdSymbol(symbol)}&interval=${tdInterval(timeframe)}&outputsize=${outputsize}&apikey=${config.tdKey}&format=JSON&timezone=UTC`;
+  
+  try {
+    const resp = await fetch(url);
+    const data = await resp.json();
+    
+    if (data.status === 'error') {
+      console.error('Twelve Data error:', data.message);
+      return null;
+    }
+    
+    if (!data.values || data.values.length === 0) return null;
+    
+    // Twelve Data returns newest first — reverse for Lightweight Charts
+    return data.values.reverse().map(v => ({
+      time: Math.floor(new Date(v.datetime + 'Z').getTime() / 1000),
+      open: parseFloat(v.open),
+      high: parseFloat(v.high),
+      low: parseFloat(v.low),
+      close: parseFloat(v.close),
+    }));
+  } catch (e) {
+    console.error('Candle fetch failed:', e);
+    return null;
+  }
+}
+
+async function loadChart(setup) {
+  initChart();
+  
+  document.getElementById('chartUpdateTime').textContent = 'Loading candles...';
+  
+  const candles = await fetchCandles(setup.symbol, setup.timeframe);
+  
+  if (candles && candles.length > 0) {
+    candleSeries.setData(candles);
+    drawSetupLevels(setup);
+    chart.timeScale().fitContent();
+    document.getElementById('chartUpdateTime').textContent = 
+      `Updated ${new Date().toLocaleTimeString()}`;
+    
+    // Start polling for live updates
+    startCandlePolling(setup);
+  } else {
+    document.getElementById('chartUpdateTime').textContent = 
+      config.tdKey ? 'Failed to load candles — check API key' : 'Set Twelve Data API key in Settings';
+    // Still draw levels even without candles
+    drawSetupLevels(setup);
+  }
+}
+
+function startCandlePolling(setup) {
+  if (candleInterval) clearInterval(candleInterval);
+  
+  candleInterval = setInterval(async () => {
+    if (!selectedSetup || selectedSetup.symbol !== setup.symbol) return;
+    
+    // Fetch just the latest few bars for updates
+    const candles = await fetchCandles(setup.symbol, setup.timeframe, 5);
+    if (candles && candles.length > 0) {
+      // Update only the last candle (or add new one)
+      candles.forEach(c => candleSeries.update(c));
+      document.getElementById('chartUpdateTime').textContent = 
+        `Updated ${new Date().toLocaleTimeString()}`;
+    }
+  }, (config.interval || 30) * 1000);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+fetchSetups();
+setInterval(fetchSetups, (config.interval || 30) * 1000);
+
+// Check if Twelve Data key is missing on first load
+if (!config.tdKey) {
+  setTimeout(() => {
+    if (!config.tdKey) {
+      setStatus(true, 'Set Twelve Data key in Settings');
+    }
+  }, 2000);
+}
+</script>
+</body>
+</html>

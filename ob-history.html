@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OB Setup Dashboard — Trade History</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg-primary: #0a0e17;
+    --bg-secondary: #111827;
+    --bg-card: #151d2e;
+    --bg-hover: #1c2640;
+    --border: #1e293b;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --accent-blue: #3b82f6;
+    --accent-green: #10b981;
+    --accent-red: #ef4444;
+    --accent-amber: #f59e0b;
+    --accent-purple: #8b5cf6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+
+  /* ── Top Bar ─────────────────────────────── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    height: 48px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 16px; }
+  .logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700; font-size: 14px;
+    color: var(--accent-blue); letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--text-muted); font-weight: 400; }
+  .nav-link {
+    font-size: 12px; color: var(--text-secondary);
+    text-decoration: none; padding: 4px 10px;
+    border-radius: 4px; transition: all 0.15s;
+  }
+  .nav-link:hover, .nav-link.active { color: var(--text-primary); background: var(--bg-hover); }
+  .nav-link.active { color: var(--accent-blue); }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .status-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent-green);
+    animation: pulse 2s infinite;
+  }
+  .status-dot.offline { background: var(--accent-red); animation: none; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .status-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--text-muted);
+  }
+
+  /* ── Stats Cards ─────────────────────────── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    padding: 16px 20px;
+  }
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .stat-value.green { color: var(--accent-green); }
+  .stat-value.red { color: var(--accent-red); }
+  .stat-value.blue { color: var(--accent-blue); }
+  .stat-value.amber { color: var(--accent-amber); }
+  .stat-value.purple { color: var(--accent-purple); }
+
+  /* ── Filters ─────────────────────────────── */
+  .filters-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 20px 12px;
+    flex-wrap: wrap;
+  }
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .filter-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-right: 4px;
+  }
+  .fbtn {
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .fbtn:hover { border-color: var(--text-muted); color: var(--text-primary); }
+  .fbtn.active { background: var(--accent-blue); border-color: var(--accent-blue); color: white; }
+  .filter-select {
+    padding: 4px 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  /* ── Table ───────────────────────────────── */
+  .table-container {
+    padding: 0 20px 20px;
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  thead th {
+    position: sticky;
+    top: 48px;
+    background: var(--bg-secondary);
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    transition: color 0.15s;
+  }
+  thead th:hover { color: var(--text-primary); }
+  thead th.sorted { color: var(--accent-blue); }
+  thead th .arrow { font-size: 9px; margin-left: 3px; }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  tbody tr:hover { background: var(--bg-hover); }
+  tbody td {
+    padding: 10px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .td-symbol { font-weight: 600; color: var(--text-primary); }
+  .td-long { color: var(--accent-green); font-weight: 600; }
+  .td-short { color: var(--accent-red); font-weight: 600; }
+  .td-active { color: var(--accent-blue); }
+  .td-tp { color: var(--accent-green); }
+  .td-sl { color: var(--accent-red); }
+  .td-rr { color: var(--accent-amber); }
+  .td-muted { color: var(--text-muted); }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+  .empty-state .icon { font-size: 40px; margin-bottom: 12px; opacity: 0.3; }
+
+  /* ── Breakdown Section ───────────────────── */
+  .breakdown-section {
+    padding: 0 20px 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .breakdown-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .breakdown-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+  }
+  .breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+  }
+  .breakdown-row:last-child { border-bottom: none; }
+  .breakdown-label { color: var(--text-secondary); }
+  .breakdown-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+  }
+  .bar-container {
+    flex: 1;
+    margin: 0 12px;
+    height: 4px;
+    background: var(--bg-primary);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+
+  @media (max-width: 800px) {
+    .breakdown-section { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">OB<span>DASH</span></div>
+    <a href="ob-dashboard.html" class="nav-link">Live Chart</a>
+    <a href="ob-history.html" class="nav-link active">Trade History</a>
+  </div>
+  <div class="topbar-right">
+    <div class="status-dot" id="statusDot"></div>
+    <span class="status-text" id="statusText">Loading...</span>
+  </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-row" id="statsRow">
+  <div class="stat-card"><div class="stat-label">Total Trades</div><div class="stat-value blue" id="statTotal">—</div></div>
+  <div class="stat-card"><div class="stat-label">Active</div><div class="stat-value purple" id="statActive">—</div></div>
+  <div class="stat-card"><div class="stat-label">Wins</div><div class="stat-value green" id="statWins">—</div></div>
+  <div class="stat-card"><div class="stat-label">Losses</div><div class="stat-value red" id="statLosses">—</div></div>
+  <div class="stat-card"><div class="stat-label">Win Rate</div><div class="stat-value green" id="statWinRate">—</div></div>
+  <div class="stat-card"><div class="stat-label">Avg RR</div><div class="stat-value amber" id="statAvgRR">—</div></div>
+</div>
+
+<!-- Filters -->
+<div class="filters-bar">
+  <div class="filter-group">
+    <span class="filter-label">Status</span>
+    <button class="fbtn active" data-f="status" data-v="all" onclick="toggleFilter(this)">All</button>
+    <button class="fbtn" data-f="status" data-v="active" onclick="toggleFilter(this)">Active</button>
+    <button class="fbtn" data-f="status" data-v="closed" onclick="toggleFilter(this)">Closed</button>
+    <button class="fbtn" data-f="status" data-v="tp" onclick="toggleFilter(this)">TP</button>
+    <button class="fbtn" data-f="status" data-v="sl" onclick="toggleFilter(this)">SL</button>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">Timeframe</span>
+    <button class="fbtn active" data-f="tf" data-v="all" onclick="toggleFilter(this)">All</button>
+    <button class="fbtn" data-f="tf" data-v="H1" onclick="toggleFilter(this)">H1</button>
+    <button class="fbtn" data-f="tf" data-v="M15" onclick="toggleFilter(this)">M15</button>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">Source</span>
+    <button class="fbtn active" data-f="source" data-v="all" onclick="toggleFilter(this)">All</button>
+    <button class="fbtn" data-f="source" data-v="v3" onclick="toggleFilter(this)">V3</button>
+    <button class="fbtn" data-f="source" data-v="modelb" onclick="toggleFilter(this)">Model B</button>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">Pair</span>
+    <select class="filter-select" id="pairFilter" onchange="applyFilters()">
+      <option value="all">All Pairs</option>
+    </select>
+  </div>
+</div>
+
+<!-- Trade Table -->
+<div class="table-container">
+  <table id="tradeTable">
+    <thead>
+      <tr>
+        <th data-col="symbol" onclick="sortBy('symbol')">Pair <span class="arrow"></span></th>
+        <th data-col="direction" onclick="sortBy('direction')">Dir <span class="arrow"></span></th>
+        <th data-col="timeframe" onclick="sortBy('timeframe')">TF <span class="arrow"></span></th>
+        <th data-col="source" onclick="sortBy('source')">Source <span class="arrow"></span></th>
+        <th data-col="entry" onclick="sortBy('entry')">Entry <span class="arrow"></span></th>
+        <th data-col="sl" onclick="sortBy('sl')">SL <span class="arrow"></span></th>
+        <th data-col="tp" onclick="sortBy('tp')">TP <span class="arrow"></span></th>
+        <th data-col="rr" onclick="sortBy('rr')">RR <span class="arrow"></span></th>
+        <th data-col="status" onclick="sortBy('status')">Outcome <span class="arrow"></span></th>
+        <th data-col="time" onclick="sortBy('time')">Opened <span class="arrow"></span></th>
+        <th data-col="close_time" onclick="sortBy('close_time')">Closed <span class="arrow"></span></th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+    </tbody>
+  </table>
+</div>
+
+<!-- Breakdown Section -->
+<div class="breakdown-section" id="breakdownSection">
+  <div class="breakdown-card" id="pairBreakdown">
+    <div class="breakdown-title">Win Rate by Pair</div>
+  </div>
+  <div class="breakdown-card" id="sourceBreakdown">
+    <div class="breakdown-title">Win Rate by Source</div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CONFIG (shared with dashboard page via localStorage)
+// ═══════════════════════════════════════════════════════════════
+const DEFAULTS = {
+  apiUrl: 'https://ob-setup-api.onrender.com',
+  apiKey: 'Xd8xhdyxjQqq',
+};
+function loadConfig() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('obdash_config') || '{}');
+    return { ...DEFAULTS, ...saved };
+  } catch { return { ...DEFAULTS }; }
+}
+const config = loadConfig();
+
+let allTrades = [];
+let filteredTrades = [];
+let sortCol = 'time';
+let sortDir = 'desc';
+let filters = { status: 'all', tf: 'all', source: 'all', pair: 'all' };
+
+// ═══════════════════════════════════════════════════════════════
+// FETCH DATA
+// ═══════════════════════════════════════════════════════════════
+async function fetchHistory() {
+  try {
+    const resp = await fetch(`${config.apiUrl}/history`, {
+      headers: { 'X-API-Key': config.apiKey }
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    
+    allTrades = data.trades || [];
+    updateStats(data.stats || {});
+    populatePairFilter();
+    applyFilters();
+    setStatus(true, `${allTrades.length} trades loaded`);
+  } catch (e) {
+    console.error('Fetch failed:', e);
+    setStatus(false, 'API error');
+    showEmpty();
+  }
+}
+
+function setStatus(online, text) {
+  document.getElementById('statusDot').className = `status-dot ${online ? '' : 'offline'}`;
+  document.getElementById('statusText').textContent = text;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════════════════════════════
+function updateStats(stats) {
+  document.getElementById('statTotal').textContent = stats.total_trades || 0;
+  document.getElementById('statActive').textContent = stats.active || 0;
+  document.getElementById('statWins').textContent = stats.wins || 0;
+  document.getElementById('statLosses').textContent = stats.losses || 0;
+  document.getElementById('statWinRate').textContent = stats.closed > 0 ? `${stats.win_rate}%` : '—';
+  document.getElementById('statAvgRR').textContent = stats.avg_rr ? `${stats.avg_rr}:1` : '—';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FILTERS
+// ═══════════════════════════════════════════════════════════════
+function populatePairFilter() {
+  const select = document.getElementById('pairFilter');
+  const pairs = [...new Set(allTrades.map(t => t.symbol))].sort();
+  select.innerHTML = '<option value="all">All Pairs</option>' +
+    pairs.map(p => `<option value="${p}">${p}</option>`).join('');
+}
+
+function toggleFilter(btn) {
+  const group = btn.dataset.f;
+  const value = btn.dataset.v;
+  
+  // Deactivate siblings
+  document.querySelectorAll(`.fbtn[data-f="${group}"]`).forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  
+  filters[group] = value;
+  applyFilters();
+}
+
+function applyFilters() {
+  filters.pair = document.getElementById('pairFilter').value;
+  
+  filteredTrades = allTrades.filter(t => {
+    if (filters.status !== 'all') {
+      if (filters.status === 'active' && t.status !== 'active') return false;
+      if (filters.status === 'closed' && !t.status.startsWith('closed')) return false;
+      if (filters.status === 'tp' && t.status !== 'closed_tp') return false;
+      if (filters.status === 'sl' && t.status !== 'closed_sl') return false;
+    }
+    if (filters.tf !== 'all' && t.timeframe !== filters.tf) return false;
+    if (filters.source !== 'all' && t.source !== filters.source) return false;
+    if (filters.pair !== 'all' && t.symbol !== filters.pair) return false;
+    return true;
+  });
+  
+  doSort();
+  renderTable();
+  renderBreakdowns();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SORTING
+// ═══════════════════════════════════════════════════════════════
+function sortBy(col) {
+  if (sortCol === col) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  else { sortCol = col; sortDir = col === 'time' ? 'desc' : 'asc'; }
+  
+  // Update header arrows
+  document.querySelectorAll('thead th').forEach(th => {
+    th.classList.remove('sorted');
+    th.querySelector('.arrow').textContent = '';
+  });
+  const th = document.querySelector(`th[data-col="${col}"]`);
+  if (th) {
+    th.classList.add('sorted');
+    th.querySelector('.arrow').textContent = sortDir === 'asc' ? '▲' : '▼';
+  }
+  
+  doSort();
+  renderTable();
+}
+
+function doSort() {
+  filteredTrades.sort((a, b) => {
+    let va = a[sortCol], vb = b[sortCol];
+    if (sortCol === 'time') { va = a.time_unix || 0; vb = b.time_unix || 0; }
+    if (sortCol === 'close_time') { va = a.close_time || ''; vb = b.close_time || ''; }
+    if (typeof va === 'number' && typeof vb === 'number') {
+      return sortDir === 'asc' ? va - vb : vb - va;
+    }
+    va = String(va || ''); vb = String(vb || '');
+    return sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER TABLE
+// ═══════════════════════════════════════════════════════════════
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  
+  if (filteredTrades.length === 0) {
+    showEmpty();
+    return;
+  }
+  
+  tbody.innerHTML = filteredTrades.map(t => {
+    const prec = (t.symbol || '').includes('JPY') ? 3 : 5;
+    const dirClass = t.direction === 'LONG' ? 'td-long' : 'td-short';
+    let statusClass = 'td-active', statusLabel = '● Active';
+    if (t.status === 'closed_tp') { statusClass = 'td-tp'; statusLabel = '✓ TP'; }
+    else if (t.status === 'closed_sl') { statusClass = 'td-sl'; statusLabel = '✗ SL'; }
+    
+    return `<tr>
+      <td class="td-symbol">${t.symbol}</td>
+      <td class="${dirClass}">${t.direction}</td>
+      <td>${t.timeframe}</td>
+      <td>${(t.source || '').toUpperCase()}</td>
+      <td>${t.entry.toFixed(prec)}</td>
+      <td class="td-sl">${t.sl.toFixed(prec)}</td>
+      <td class="td-tp">${t.tp.toFixed(prec)}</td>
+      <td class="td-rr">${t.rr}:1</td>
+      <td class="${statusClass}">${statusLabel}</td>
+      <td class="td-muted">${t.time || '—'}</td>
+      <td class="td-muted">${t.close_time || '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function showEmpty() {
+  document.getElementById('tableBody').innerHTML = `
+    <tr><td colspan="11">
+      <div class="empty-state">
+        <div class="icon">📭</div>
+        No trades found. Start your MT5 scripts to begin sending setups.
+      </div>
+    </td></tr>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BREAKDOWNS
+// ═══════════════════════════════════════════════════════════════
+function renderBreakdowns() {
+  const closed = filteredTrades.filter(t => t.status.startsWith('closed'));
+  
+  // By pair
+  const pairCard = document.getElementById('pairBreakdown');
+  const pairStats = {};
+  closed.forEach(t => {
+    if (!pairStats[t.symbol]) pairStats[t.symbol] = { wins: 0, total: 0 };
+    pairStats[t.symbol].total++;
+    if (t.status === 'closed_tp') pairStats[t.symbol].wins++;
+  });
+  
+  const pairEntries = Object.entries(pairStats).sort((a, b) => {
+    const wrA = a[1].total ? a[1].wins / a[1].total : 0;
+    const wrB = b[1].total ? b[1].wins / b[1].total : 0;
+    return wrB - wrA;
+  });
+  
+  pairCard.innerHTML = '<div class="breakdown-title">Win Rate by Pair</div>' +
+    (pairEntries.length === 0 ? '<div style="color:var(--text-muted);font-size:12px;">No closed trades</div>' :
+    pairEntries.map(([pair, s]) => {
+      const wr = s.total ? Math.round(s.wins / s.total * 100) : 0;
+      const barColor = wr >= 50 ? 'var(--accent-green)' : 'var(--accent-red)';
+      return `<div class="breakdown-row">
+        <span class="breakdown-label" style="font-family:'JetBrains Mono',monospace;min-width:70px;">${pair}</span>
+        <div class="bar-container"><div class="bar-fill" style="width:${wr}%;background:${barColor};"></div></div>
+        <span class="breakdown-value" style="color:${barColor};min-width:60px;text-align:right;">${wr}% (${s.wins}/${s.total})</span>
+      </div>`;
+    }).join(''));
+  
+  // By source
+  const srcCard = document.getElementById('sourceBreakdown');
+  const srcStats = {};
+  closed.forEach(t => {
+    const src = (t.source || 'unknown').toUpperCase();
+    if (!srcStats[src]) srcStats[src] = { wins: 0, total: 0 };
+    srcStats[src].total++;
+    if (t.status === 'closed_tp') srcStats[src].wins++;
+  });
+  
+  const srcEntries = Object.entries(srcStats);
+  srcCard.innerHTML = '<div class="breakdown-title">Win Rate by Source</div>' +
+    (srcEntries.length === 0 ? '<div style="color:var(--text-muted);font-size:12px;">No closed trades</div>' :
+    srcEntries.map(([src, s]) => {
+      const wr = s.total ? Math.round(s.wins / s.total * 100) : 0;
+      const barColor = wr >= 50 ? 'var(--accent-green)' : 'var(--accent-red)';
+      return `<div class="breakdown-row">
+        <span class="breakdown-label" style="font-family:'JetBrains Mono',monospace;min-width:70px;">${src}</span>
+        <div class="bar-container"><div class="bar-fill" style="width:${wr}%;background:${barColor};"></div></div>
+        <span class="breakdown-value" style="color:${barColor};min-width:60px;text-align:right;">${wr}% (${s.wins}/${s.total})</span>
+      </div>`;
+    }).join(''));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+fetchHistory();
+setInterval(fetchHistory, 60000);  // refresh every 60s
+</script>
+</body>
+</html>
