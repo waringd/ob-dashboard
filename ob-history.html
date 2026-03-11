@@ -150,17 +150,9 @@
     <button class="fbtn" data-f="status" data-v="tp" onclick="tog(this)">TP</button>
     <button class="fbtn" data-f="status" data-v="sl" onclick="tog(this)">SL</button>
   </div>
-  <div class="filter-group">
-    <span class="filter-label">Timeframe</span>
-    <button class="fbtn active" data-f="tf" data-v="all" onclick="tog(this)">All</button>
-    <button class="fbtn" data-f="tf" data-v="H1" onclick="tog(this)">H1</button>
-    <button class="fbtn" data-f="tf" data-v="M15" onclick="tog(this)">M15</button>
-  </div>
-  <div class="filter-group">
-    <span class="filter-label">Source</span>
+  <div class="filter-group" id="strategyFilterGroup">
+    <span class="filter-label">Strategy</span>
     <button class="fbtn active" data-f="source" data-v="all" onclick="tog(this)">All</button>
-    <button class="fbtn" data-f="source" data-v="v3" onclick="tog(this)">V3</button>
-    <button class="fbtn" data-f="source" data-v="modelb" onclick="tog(this)">Model B</button>
   </div>
   <div class="filter-group">
     <span class="filter-label">Pair</span>
@@ -194,7 +186,7 @@ const DEFAULTS={apiUrl:'https://ob-setup-api.onrender.com',apiKey:'Xd8xhdyxjQqq'
 function loadCfg(){try{return{...DEFAULTS,...JSON.parse(localStorage.getItem('obdash_config')||'{}')}}catch{return{...DEFAULTS}}}
 const config=loadCfg();
 let allTrades=[],filtered=[],sortCol='time',sortDir='desc';
-let filters={status:'all',tf:'all',source:'all',pair:'all'};
+let filters={status:'all',source:'all',pair:'all'};
 let expandedTicket=null;
 
 async function fetchHistory(){
@@ -204,6 +196,7 @@ async function fetchHistory(){
     const d=await r.json();
     allTrades=d.trades||[];
     updateStats(d.stats||{});
+    rebuildStrategyFilters();
     populatePairs(); apply();
     setStatus(true,`${allTrades.length} trades loaded`);
   }catch(e){console.error(e);setStatus(false,'API error');showEmpty();}
@@ -211,6 +204,21 @@ async function fetchHistory(){
 function setStatus(on,t){
   document.getElementById('statusDot').className='status-dot'+(on?'':' offline');
   document.getElementById('statusText').textContent=t;
+}
+function rebuildStrategyFilters(){
+  const sources=[...new Set(allTrades.map(t=>(t.source||'').toLowerCase()).filter(Boolean))].sort();
+  const grp=document.getElementById('strategyFilterGroup');
+  const existing=new Set([...grp.querySelectorAll('.fbtn')].map(b=>b.dataset.v));
+  sources.forEach(src=>{
+    if(existing.has(src))return;
+    const btn=document.createElement('button');
+    btn.className='fbtn';
+    btn.dataset.f='source';
+    btn.dataset.v=src;
+    btn.textContent=src.toUpperCase();
+    btn.onclick=function(){tog(this)};
+    grp.appendChild(btn);
+  });
 }
 function updateStats(s){
   document.getElementById('statTotal').textContent=s.total_trades||0;
@@ -240,7 +248,6 @@ function apply(){
       if(filters.status==='tp'&&t.status!=='closed_tp') return false;
       if(filters.status==='sl'&&t.status!=='closed_sl') return false;
     }
-    if(filters.tf!=='all'&&t.timeframe!==filters.tf) return false;
     if(filters.source!=='all'&&t.source!==filters.source) return false;
     if(filters.pair!=='all'&&t.symbol!==filters.pair) return false;
     return true;

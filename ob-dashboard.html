@@ -71,14 +71,14 @@
   .detail-value{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500}
   .detail-value.entry{color:var(--accent-blue)}.detail-value.sl{color:var(--accent-red)}.detail-value.tp{color:var(--accent-green)}.detail-value.rr{color:var(--accent-amber)}
 
-  /* ── Drawing Toolbar ── */
-  .draw-toolbar{position:absolute;top:8px;right:8px;z-index:20;display:none;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:3px;flex-direction:column;gap:1px}
-  .draw-toolbar.visible{display:flex}
-  .draw-btn{width:34px;height:34px;border:none;background:transparent;color:var(--text-secondary);border-radius:6px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+  /* ── Drawing Toolbar — lives in chart header, horizontal ── */
+  .draw-toolbar{display:none;align-items:center;gap:2px;flex-shrink:0}
+  .draw-tool-group{display:flex;align-items:center;gap:1px}
+  .draw-vsep{width:1px;height:20px;background:var(--border);margin:0 4px;flex-shrink:0}
+  .draw-btn{width:28px;height:28px;border:none;background:transparent;color:var(--text-secondary);border-radius:5px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
   .draw-btn:hover{background:var(--bg-hover);color:var(--text-primary)}.draw-btn.active{background:var(--accent-blue);color:white}
-  .draw-sep{width:24px;height:1px;background:var(--border);margin:1px auto}
-  .color-row{display:flex;gap:3px;padding:3px 2px;justify-content:center}
-  .color-dot{width:12px;height:12px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color .15s}
+  .color-row{display:flex;align-items:center;gap:4px;padding:0 2px}
+  .color-dot{width:11px;height:11px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color .15s;flex-shrink:0}
   .color-dot:hover,.color-dot.active{border-color:white}
   .draw-indicator{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);z-index:20;background:var(--accent-blue);color:white;padding:5px 14px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:10px;display:none;pointer-events:none;white-space:nowrap}
   .draw-indicator.visible{display:block}
@@ -131,16 +131,15 @@
     .detail-label{font-size:8px}
     .detail-value{font-size:11px}
 
-    /* Drawing toolbar smaller on mobile */
-    .draw-toolbar{top:4px;right:4px;padding:2px}
-    .draw-btn{width:30px;height:30px;font-size:13px}
-    .color-dot{width:10px;height:10px}
+    /* Drawing toolbar on mobile — hide colour picker to save space */
+    .draw-btn{width:26px;height:26px;font-size:12px}
+    .color-dot{width:9px;height:9px}
     .chart-legend{font-size:8px;gap:6px;padding:3px 6px}
     .draw-indicator{font-size:9px;padding:4px 10px}
 
     /* Chart header compact */
-    .chart-header{padding:4px 8px}
-    .chart-symbol-name{font-size:13px}
+    .chart-header{padding:4px 6px;gap:4px}
+    .chart-symbol-name{font-size:12px}
   }
 </style>
 </head>
@@ -162,11 +161,9 @@
 <div class="main-layout">
   <div class="sidebar">
     <div class="sidebar-header">
-      <div class="filter-row">
-        <button class="filter-btn active" onclick="setFilter('ALL',this)">ALL</button>
-        <button class="filter-btn" onclick="setFilter('H1',this)">H1</button>
-        <button class="filter-btn" onclick="setFilter('M15',this)">M15</button>
-        <button class="filter-btn" onclick="setFilter('active',this)">ACTIVE</button>
+      <div class="filter-row" id="filterRow">
+        <button class="filter-btn active" data-filter="ALL" onclick="setFilter('ALL',this)">ALL</button>
+        <button class="filter-btn" data-filter="active" onclick="setFilter('active',this)">ACTIVE</button>
       </div>
     </div>
     <div class="trade-list" id="tradeList"><div class="no-trades"><div class="icon">📡</div>Loading...</div></div>
@@ -179,7 +176,29 @@
         <span class="chart-symbol-name" id="chartSymbolName"></span>
         <span class="chart-tf-badge" id="chartTfBadge"></span>
       </div>
-      <span style="font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;white-space:nowrap" id="chartUpdateTime"></span>
+      <!-- Drawing toolbar — lives here so it never overlaps the price axis -->
+      <div class="draw-toolbar" id="drawToolbar" style="display:none">
+        <div class="draw-tool-group">
+          <button class="draw-btn active" onclick="setDrawMode('pointer')" id="btnPointer" title="Select">↖</button>
+          <button class="draw-btn" onclick="setDrawMode('hline')" id="btnHline" title="Horizontal line">─</button>
+          <button class="draw-btn" onclick="setDrawMode('trendline')" id="btnTrend" title="Trendline">╱</button>
+          <button class="draw-btn" onclick="setDrawMode('ray')" id="btnRay" title="Ray">→</button>
+        </div>
+        <div class="draw-vsep"></div>
+        <div class="draw-tool-group">
+          <button class="draw-btn" onclick="setDrawMode('delete')" id="btnDelete" title="Delete drawing" style="color:var(--accent-red)">✕</button>
+          <button class="draw-btn" onclick="clearAllDrawings()" title="Clear all">🗑</button>
+        </div>
+        <div class="draw-vsep"></div>
+        <div class="color-row">
+          <div class="color-dot active" style="background:#ffffff" onclick="setDrawColor('#ffffff',this)"></div>
+          <div class="color-dot" style="background:#3b82f6" onclick="setDrawColor('#3b82f6',this)"></div>
+          <div class="color-dot" style="background:#ef4444" onclick="setDrawColor('#ef4444',this)"></div>
+          <div class="color-dot" style="background:#10b981" onclick="setDrawColor('#10b981',this)"></div>
+          <div class="color-dot" style="background:#f59e0b" onclick="setDrawColor('#f59e0b',this)"></div>
+        </div>
+      </div>
+      <span style="font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;white-space:nowrap;margin-left:auto" id="chartUpdateTime"></span>
     </div>
     <div class="chart-container" id="chartContainer">
       <div class="welcome" id="welcomeState"><div class="icon">📊</div><h2>Select a trade</h2><p>Click any setup in the sidebar to view the chart.</p></div>
@@ -189,23 +208,6 @@
         <div class="legend-item"><div class="legend-swatch" style="background:#ef4444"></div><span style="color:#ef4444">SL</span></div>
         <div class="legend-item"><div class="legend-swatch" style="background:#10b981"></div><span style="color:#10b981">TP</span></div>
         <div class="legend-item"><div class="legend-box" style="background:rgba(245,158,11,.2);border:1px solid #f59e0b"></div><span style="color:#f59e0b">OB</span></div>
-      </div>
-      <div class="draw-toolbar" id="drawToolbar">
-        <button class="draw-btn" onclick="setDrawMode('pointer')" id="btnPointer"><span>↖</span></button>
-        <button class="draw-btn" onclick="setDrawMode('hline')" id="btnHline"><span>─</span></button>
-        <button class="draw-btn" onclick="setDrawMode('trendline')" id="btnTrend"><span>╱</span></button>
-        <button class="draw-btn" onclick="setDrawMode('ray')" id="btnRay"><span>→</span></button>
-        <div class="draw-sep"></div>
-        <button class="draw-btn" onclick="setDrawMode('delete')" id="btnDelete" style="color:var(--accent-red)"><span>✕</span></button>
-        <button class="draw-btn" onclick="clearAllDrawings()" id="btnClearAll"><span>🗑</span></button>
-        <div class="draw-sep"></div>
-        <div class="color-row">
-          <div class="color-dot active" style="background:#ffffff" onclick="setDrawColor('#ffffff',this)"></div>
-          <div class="color-dot" style="background:#3b82f6" onclick="setDrawColor('#3b82f6',this)"></div>
-          <div class="color-dot" style="background:#ef4444" onclick="setDrawColor('#ef4444',this)"></div>
-          <div class="color-dot" style="background:#10b981" onclick="setDrawColor('#10b981',this)"></div>
-          <div class="color-dot" style="background:#f59e0b" onclick="setDrawColor('#f59e0b',this)"></div>
-        </div>
       </div>
       <div class="draw-indicator" id="drawIndicator"></div>
     </div>
@@ -255,16 +257,43 @@ function mobileShowChart(){document.body.classList.add('mobile-chart-view')}
 function mobileBack(){document.body.classList.remove('mobile-chart-view');setDrawMode('pointer')}
 
 async function fetchSetups(){
-  try{const r=await fetch(`${config.apiUrl}/all`,{headers:{'X-API-Key':config.apiKey}});if(!r.ok)throw new Error(`HTTP ${r.status}`);allSetups=await r.json();setStatus(true,`${Object.keys(allSetups).length} pairs`);renderTradeList()}catch(e){console.error(e);setStatus(false,'API error')}
+  try{
+    const r=await fetch(`${config.apiUrl}/all`,{headers:{'X-API-Key':config.apiKey}});
+    if(!r.ok)throw new Error(`HTTP ${r.status}`);
+    allSetups=await r.json();
+    setStatus(true,`${Object.keys(allSetups).length} pairs`);
+    rebuildStrategyFilters();
+    renderTradeList();
+  }catch(e){console.error(e);setStatus(false,'API error')}
 }
 function setStatus(on,t){document.getElementById('statusDot').className='status-dot'+(on?'':' offline');document.getElementById('statusText').textContent=t}
+
+// Build strategy filter buttons dynamically from whatever sources exist in the data
+function rebuildStrategyFilters(){
+  const trades=[];
+  for(const[,s]of Object.entries(allSetups))trades.push(...s);
+  const sources=[...new Set(trades.map(t=>(t.source||'').toLowerCase()).filter(Boolean))].sort();
+  const row=document.getElementById('filterRow');
+  // Keep ALL and ACTIVE, rebuild strategy buttons in between
+  const existing=new Set([...row.querySelectorAll('.filter-btn')].map(b=>b.dataset.filter));
+  sources.forEach(src=>{
+    if(existing.has(src))return;
+    const btn=document.createElement('button');
+    btn.className='filter-btn';
+    btn.dataset.filter=src;
+    btn.textContent=src.toUpperCase();
+    btn.onclick=function(){setFilter(src,this)};
+    // Insert before ACTIVE button
+    const activeBtn=row.querySelector('[data-filter="active"]');
+    row.insertBefore(btn,activeBtn);
+  });
+}
 
 function renderTradeList(){
   const el=document.getElementById('tradeList');let trades=[];
   for(const[,s]of Object.entries(allSetups))trades.push(...s);
-  if(currentFilter==='H1')trades=trades.filter(t=>t.timeframe==='H1');
-  else if(currentFilter==='M15')trades=trades.filter(t=>t.timeframe==='M15');
-  else if(currentFilter==='active')trades=trades.filter(t=>t.status==='active');
+  if(currentFilter==='active') trades=trades.filter(t=>t.status==='active');
+  else if(currentFilter!=='ALL') trades=trades.filter(t=>(t.source||'').toLowerCase()===currentFilter);
   trades.sort((a,b)=>(b.time_unix||0)-(a.time_unix||0));
   if(!trades.length){el.innerHTML=`<div class="no-trades"><div class="icon">📭</div>No setups found.</div>`;return}
   el.innerHTML=trades.map(t=>{
@@ -274,10 +303,15 @@ function renderTradeList(){
     const sl=t.status==='active'?'● ACTIVE':t.status==='closed_tp'?'✓ TP':'✗ SL';
     return`<div class="trade-item ${sel?'selected':''}" onclick='selectTrade(${JSON.stringify(t).replace(/'/g,"&#39;")})'>
       <div class="trade-item-top"><span class="trade-symbol">${t.symbol}</span><span class="trade-dir ${dc}">${t.direction}</span></div>
-      <div class="trade-meta"><span class="tag">${t.timeframe}</span><span class="tag">${(t.source||'').toUpperCase()}</span><span class="trade-status ${sc}">${sl}</span></div></div>`
+      <div class="trade-meta"><span class="tag">${(t.source||'').toUpperCase()}</span><span class="trade-status ${sc}">${sl}</span></div></div>`
   }).join('')
 }
-function setFilter(f,btn){currentFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderTradeList()}
+function setFilter(f,btn){
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTradeList();
+}
 
 function selectTrade(setup){
   selectedSetup=setup;renderTradeList();
@@ -285,7 +319,7 @@ function selectTrade(setup){
   document.getElementById('chart').style.display='block';
   document.getElementById('chartHeader').style.display='flex';
   document.getElementById('chartLegend').style.display='flex';
-  document.getElementById('drawToolbar').classList.add('visible');
+  document.getElementById('drawToolbar').style.display='flex';
   document.getElementById('detailsPanel').classList.add('visible');
   document.getElementById('chartSymbolName').textContent=setup.symbol;
   document.getElementById('chartTfBadge').textContent=`${setup.timeframe} · ${(setup.source||'').toUpperCase()}`;
@@ -349,9 +383,9 @@ function setDrawMode(mode){
   const m={pointer:'btnPointer',hline:'btnHline',trendline:'btnTrend',ray:'btnRay',delete:'btnDelete'};
   if(m[mode])document.getElementById(m[mode]).classList.add('active');
   const ind=document.getElementById('drawIndicator');
-  const l={hline:'Tap to place horizontal line',trendline:'Tap first point',ray:'Tap to place ray',delete:'Tap a drawing to delete'};
+  const l={hline:'Click to place horizontal line',trendline:'Click first point',ray:'Click to place ray',delete:'Click a drawing to delete'};
   if(l[mode]){ind.textContent=l[mode];ind.classList.add('visible')}else ind.classList.remove('visible');
-  document.getElementById('chart').style.cursor=mode==='pointer'?'default':'crosshair';
+  document.getElementById('chartContainer').style.cursor=mode==='pointer'?'default':'crosshair';
 }
 function setDrawColor(c,el){drawColor=c;document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('active'));if(el)el.classList.add('active')}
 
